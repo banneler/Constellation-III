@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         activities: [],
         contact_sequences: [],
         tasks: [],
+        deals: []
     };
 
     // --- DOM Element Selectors ---
@@ -57,20 +58,28 @@ document.addEventListener("DOMContentLoaded", async () => {
         return today.toISOString();
     }
     
-    // --- Data Fetching ---
+    // --- Data Fetching (Corrected) ---
     async function loadAllData() {
         if (!state.currentUser) return;
-        const tables = ["contacts", "accounts", "sequences", "activities", "contact_sequences", "deals", "tasks", "sequence_steps"];
-        const promises = tables.map(table => supabase.from(table).select("*").eq("user_id", state.currentUser.id));
         
+        // CORRECTED: Separate tables with user_id from public tables
+        const userSpecificTables = ["contacts", "accounts", "sequences", "activities", "contact_sequences", "deals", "tasks"];
+        const publicTables = ["sequence_steps"]; 
+
+        const userPromises = userSpecificTables.map(table => supabase.from(table).select("*").eq("user_id", state.currentUser.id));
+        const publicPromises = publicTables.map(table => supabase.from(table).select("*"));
+        
+        const allPromises = [...userPromises, ...publicPromises];
+        const allTableNames = [...userSpecificTables, ...publicTables];
+
         try {
-            const results = await Promise.allSettled(promises);
+            const results = await Promise.allSettled(allPromises);
             results.forEach((result, index) => {
-                const tableName = tables[index];
+                const tableName = allTableNames[index];
                 if (result.status === "fulfilled" && !result.value.error) {
                     state[tableName] = result.value.data || [];
                 } else {
-                    console.error(`Error fetching ${tableName}:`, result.status === 'fulfilled' ? result.value.error : result.reason);
+                    console.error(`Error fetching ${tableName}:`, result.status === 'fulfilled' ? result.value.error.message : result.reason);
                     state[tableName] = [];
                 }
             });
@@ -103,7 +112,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     if (contact) linkedEntity = `<a href="contacts.html?contactId=${contact.id}" class="contact-name-link">${contact.first_name} ${contact.last_name}</a> (Contact)`;
                 } else if (task.account_id) {
                     const account = state.accounts.find(a => a.id === task.account_id);
-                    if(account) linkedEntity = `<a href="accounts.html?accountId=${account.id}" class="contact-name-link">${account.name}</a> (Account)`;
+                    if (account) linkedEntity = `<a href="accounts.html?accountId=${account.id}" class="contact-name-link">${account.name}</a> (Account)`;
                 }
                 row.innerHTML = `<td>${formatDate(task.due_date)}</td><td>${task.description}</td><td>${linkedEntity}</td>
                     <td>
@@ -156,7 +165,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             });
     }
 
-    // --- EVENT LISTENER SETUP ---
+    // --- EVENT LISTENER SETUP (with all logic restored) ---
     function setupPageEventListeners() {
         setupModalListeners();
         themeToggleBtn.addEventListener("click", cycleTheme);
@@ -166,14 +175,34 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
 
         addNewTaskBtn.addEventListener('click', () => {
+            // CORRECTED: Restored the "Linked To" select element
+            const contactsOptions = state.contacts.map(c => `<option value="c-${c.id}">${c.first_name} ${c.last_name} (Contact)</option>`).join('');
+            const accountsOptions = state.accounts.map(a => `<option value="a-${a.id}">${a.name} (Account)</option>`).join('');
+            
             showModal('Add New Task', `
                 <label>Description:</label><input type="text" id="modal-task-description" required>
                 <label>Due Date:</label><input type="date" id="modal-task-due-date">
+                <label>Link To (Optional):</label>
+                <select id="modal-task-linked-entity">
+                    <option value="">-- None --</option>
+                    <optgroup label="Contacts">${contactsOptions}</optgroup>
+                    <optgroup label="Accounts">${accountsOptions}</optgroup>
+                </select>
             `, async () => {
                 const description = document.getElementById('modal-task-description').value.trim();
                 const dueDate = document.getElementById('modal-task-due-date').value;
+                const linkedEntityValue = document.getElementById('modal-task-linked-entity').value;
+                
                 if (!description) { alert('Description is required.'); return; }
-                const { error } = await supabase.from('tasks').insert({ description, due_date: dueDate, user_id: state.currentUser.id, status: 'Pending' });
+                
+                const taskData = { description, due_date: dueDate || null, user_id: state.currentUser.id, status: 'Pending' };
+                if (linkedEntityValue.startsWith('c-')) {
+                    taskData.contact_id = Number(linkedEntityValue.substring(2));
+                } else if (linkedEntityValue.startsWith('a-')) {
+                    taskData.account_id = Number(linkedEntityValue.substring(2));
+                }
+
+                const { error } = await supabase.from('tasks').insert(taskData);
                 if (error) { alert('Error adding task: ' + error.message); } 
                 else { await loadAllData(); hideModal(); }
             });
@@ -199,16 +228,40 @@ document.addEventListener("DOMContentLoaded", async () => {
                     await loadAllData();
                     hideModal();
                 });
+            } else if (button.matches('.edit-task-btn')) {
+                // CORRECTED: Added the missing "Edit Task" logic
+                const taskId = button.dataset.taskId;
+                const task = state.tasks.find(t => t.id == taskId);
+                if (!task) { alert('Task not found.'); return; }
+
+                const contactsOptions = state.contacts.map(c => `<option value="c-${c.id}" ${c.id === task.contact_id ? 'selected' : ''}>${c.first_name} ${c.last_name} (Contact)</option>`).join('');
+                const accountsOptions = state.accounts.map(a => `<option value="a-${a.id}" ${a.id === task.account_id ? 'selected' : ''}>${a.name} (Account)</option>`).join('');
+
+                showModal('Edit Task', `
+                    <label>Description:</label><input type="text" id="modal-task-description" value="${task.description}" required>
+                    <label>Due Date:</label><input type="date" id="modal-task-due-date" value="${task.due_date ? task.due_date.substring(0, 10) : ''}">
+                    <label>Link To:</label>
+                    <select id="modal-task-linked-entity">
+                        <option value="">-- None --</option>
+                        <optgroup label="Contacts">${contactsOptions}</optgroup>
+                        <optgroup label="Accounts">${accountsOptions}</optgroup>
+                    </select>
+                `, async () => {
+                    const newDescription = document.getElementById('modal-task-description').value.trim();
+                    const newDueDate = document.getElementById('modal-task-due-date').value;
+                    const linkedEntityValue = document.getElementById('modal-task-linked-entity').value;
+                    if (!newDescription) { alert('Task description is required.'); return; }
+
+                    const updateData = { description: newDescription, due_date: newDueDate || null, contact_id: null, account_id: null };
+                    if (linkedEntityValue.startsWith('c-')) { updateData.contact_id = Number(linkedEntityValue.substring(2)); } 
+                    else if (linkedEntityValue.startsWith('a-')) { updateData.account_id = Number(linkedEntityValue.substring(2)); }
+                    
+                    await supabase.from('tasks').update(updateData).eq('id', taskId);
+                    await loadAllData();
+                    hideModal();
+                });
             }
 
-            // Sequence Steps Due buttons
-            if (button.matches('.complete-step-btn')) {
-                 const csId = Number(button.dataset.id);
-                 // The full completeStep logic will be added back here
-            } else if (button.matches('.send-email-btn')) {
-                // Send email logic...
-            }
-            
             // Upcoming Sequence Tasks buttons
             if (button.matches('.revisit-step-btn')) {
                 const csId = Number(button.dataset.csId);
