@@ -3,6 +3,7 @@ import {
     SUPABASE_URL, 
     SUPABASE_ANON_KEY, 
     formatDate,
+    addDays,
     themes, 
     setupModalListeners, 
     showModal, 
@@ -58,17 +59,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         return today.toISOString();
     }
     
-    // --- Data Fetching (Corrected) ---
+    // --- Data Fetching ---
     async function loadAllData() {
         if (!state.currentUser) return;
-        
-        // CORRECTED: Separate tables with user_id from public tables
         const userSpecificTables = ["contacts", "accounts", "sequences", "activities", "contact_sequences", "deals", "tasks"];
         const publicTables = ["sequence_steps"]; 
-
         const userPromises = userSpecificTables.map(table => supabase.from(table).select("*").eq("user_id", state.currentUser.id));
         const publicPromises = publicTables.map(table => supabase.from(table).select("*"));
-        
         const allPromises = [...userPromises, ...publicPromises];
         const allTableNames = [...userSpecificTables, ...publicTables];
 
@@ -89,6 +86,29 @@ document.addEventListener("DOMContentLoaded", async () => {
             renderDashboard();
         }
     }
+    
+    // --- Core Logic ---
+    async function completeStep(csId) {
+        const cs = state.contact_sequences.find((c) => c.id === csId);
+        if (!cs) return;
+
+        const contact = state.contacts.find((c) => c.id === cs.contact_id);
+        const step = state.sequence_steps.find(s => s.sequence_id === cs.sequence_id && s.step_number === cs.current_step_number);
+
+        if (contact && step) {
+            await supabase.from("activities").insert([{ contact_id: contact.id, account_id: contact.account_id, date: new Date().toISOString(), type: `Sequence: ${step.type}`, description: step.subject || step.message || "Completed step", user_id: state.currentUser.id }]);
+        }
+
+        const nextStep = state.sequence_steps.find(s => s.sequence_id === cs.sequence_id && s.step_number === cs.current_step_number + 1);
+
+        if (nextStep) {
+            await supabase.from("contact_sequences").update({ current_step_number: nextStep.step_number, last_completed_date: new Date().toISOString(), next_step_due_date: addDays(new Date(), nextStep.delay_days).toISOString() }).eq("id", cs.id);
+        } else {
+            await supabase.from("contact_sequences").update({ status: "Completed" }).eq("id", cs.id);
+        }
+        await loadAllData();
+    }
+
 
     // --- Render Function ---
     function renderDashboard() {
@@ -112,7 +132,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     if (contact) linkedEntity = `<a href="contacts.html?contactId=${contact.id}" class="contact-name-link">${contact.first_name} ${contact.last_name}</a> (Contact)`;
                 } else if (task.account_id) {
                     const account = state.accounts.find(a => a.id === task.account_id);
-                    if (account) linkedEntity = `<a href="accounts.html?accountId=${account.id}" class="contact-name-link">${account.name}</a> (Account)`;
+                    if(account) linkedEntity = `<a href="accounts.html?accountId=${account.id}" class="contact-name-link">${account.name}</a> (Account)`;
                 }
                 row.innerHTML = `<td>${formatDate(task.due_date)}</td><td>${task.description}</td><td>${linkedEntity}</td>
                     <td>
@@ -175,7 +195,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
 
         addNewTaskBtn.addEventListener('click', () => {
-            // CORRECTED: Restored the "Linked To" select element
             const contactsOptions = state.contacts.map(c => `<option value="c-${c.id}">${c.first_name} ${c.last_name} (Contact)</option>`).join('');
             const accountsOptions = state.accounts.map(a => `<option value="a-${a.id}">${a.name} (Account)</option>`).join('');
             
@@ -229,7 +248,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                     hideModal();
                 });
             } else if (button.matches('.edit-task-btn')) {
-                // CORRECTED: Added the missing "Edit Task" logic
                 const taskId = button.dataset.taskId;
                 const task = state.tasks.find(t => t.id == taskId);
                 if (!task) { alert('Task not found.'); return; }
@@ -262,8 +280,25 @@ document.addEventListener("DOMContentLoaded", async () => {
                 });
             }
 
+            // Sequence Steps Due buttons (Corrected and Added Back)
+            else if (button.matches('.complete-step-btn')) {
+                 const csId = Number(button.dataset.id);
+                 completeStep(csId);
+            } else if (button.matches('.send-email-btn')) {
+                const csId = Number(button.dataset.csId);
+                const contactId = Number(button.dataset.contactId);
+                const subject = decodeURIComponent(button.dataset.subject);
+                let message = decodeURIComponent(button.dataset.message);
+                const contact = state.contacts.find(c => c.id === contactId);
+                if (!contact) return alert("Contact not found.");
+                message = message.replace(/{{firstName}}/g, contact.first_name);
+                const mailtoLink = `mailto:${contact.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+                window.open(mailtoLink, "_blank");
+                completeStep(csId);
+            }
+            
             // Upcoming Sequence Tasks buttons
-            if (button.matches('.revisit-step-btn')) {
+            else if (button.matches('.revisit-step-btn')) {
                 const csId = Number(button.dataset.csId);
                 const contactSequence = state.contact_sequences.find(cs => cs.id === csId);
                 if (!contactSequence) return;
