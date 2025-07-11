@@ -247,3 +247,62 @@ document.addEventListener("DOMContentLoaded", async () => {
             products: document.getElementById("modal-edit-deal-products")
               .value
           };
+          if (!updatedDeal.name || isNaN(updatedDeal.mrc)) {
+            alert("Deal Name and MRC are required.");
+            return;
+          }
+          await supabase.from("deals").update(updatedDeal).eq("id", deal.id);
+          await loadAllData();
+          hideModal();
+        }
+      );
+      document.getElementById("modal-edit-deal-stage").value = deal.stage;
+    }
+  });
+
+  dealsTable.addEventListener("click", (e) => {
+    const targetLink = e.target.closest(".deal-name-link");
+    if (targetLink) {
+      const dealId = Number(targetLink.dataset.dealId);
+      const deal = state.deals.find((d) => d.id === dealId);
+      if (deal && deal.account_id) {
+        // Redirect to accounts page with the accountId
+        window.location.href = `accounts.html?accountId=${deal.account_id}`;
+      }
+    }
+  });
+
+  // NEW: Deals View Toggle Event Listeners
+  if (viewMyDealsBtn) {
+    viewMyDealsBtn.addEventListener('click', async () => {
+      state.dealsViewMode = 'mine';
+      viewMyDealsBtn.classList.add('active');
+      viewAllDealsBtn.classList.remove('active');
+      await loadAllData();
+    });
+  }
+
+  if (viewAllDealsBtn) {
+    viewAllDealsBtn.addEventListener('click', async () => {
+      state.dealsViewMode = 'all';
+      viewAllDealsBtn.classList.add('active');
+      viewMyDealsBtn.classList.remove('active');
+      await loadAllData();
+    });
+  }
+
+  // --- App Initialization (Deals Page) ---
+  const savedTheme = localStorage.getItem('crm-theme') || 'dark';
+  const savedThemeIndex = themes.indexOf(savedTheme);
+  currentThemeIndex = savedThemeIndex !== -1 ? savedThemeIndex : 0;
+  applyTheme(themes[currentThemeIndex]);
+
+  // Check user session on page load
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    state.currentUser = session.user;
+    await loadAllData(); // Initial data load on page entry
+  } else {
+    window.location.href = "index.html"; // Redirect if not signed in
+  }
+});
