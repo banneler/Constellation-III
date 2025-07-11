@@ -21,7 +21,7 @@
   --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --logo-primary-color: var(--primary-blue);
   --logo-secondary-color: var(--text-light);
-  --meeting-purple: #8A2BE2; /* New: A default moderate purple */
+  --meeting-purple: #8A2BE2;
 }
 
 /* Dark Theme */
@@ -45,7 +45,7 @@ body.theme-dark {
   --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --logo-primary-color: var(--primary-blue);
   --logo-secondary-color: var(--text-light);
-  --meeting-purple: #8A2BE2; /* Dark theme purple */
+  --meeting-purple: #8A2BE2;
 }
 
 /* Light Theme */
@@ -69,7 +69,7 @@ body.theme-light {
   --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --logo-primary-color: var(--primary-blue);
   --logo-secondary-color: var(--text-light);
-  --meeting-purple: #6A0DAD; /* Light theme purple (maybe a bit darker for contrast) */
+  --meeting-purple: #6A0DAD;
 }
 
 /* Green Screen Theme */
@@ -91,9 +91,9 @@ body.theme-green {
   --shadow-medium: rgba(0, 255, 65, 0.2);
   --shadow-strong: rgba(0, 255, 65, 0.3);
   --font-main: 'Courier New', Courier, monospace;
-  --logo-primary-color: var(--text-medium); /* Inner constellation to text-medium (darker green) */
-  --logo-secondary-color: var(--bg-dark);  /* Outer C/text blends with dark background */
-  --meeting-purple: #9400D3; /* Green theme purple (using a shade that stands out against green) */
+  --logo-primary-color: var(--text-medium);
+  --logo-secondary-color: var(--bg-dark);
+  --meeting-purple: #9400D3;
 }
 
 /* --- GLOBAL STYLES --- */
@@ -186,6 +186,12 @@ body.theme-dark .auth-logo path[fill="#010101"] {
   transition: background 0.3s;
 }
 
+/* NEW: Style for when sidebar is open on mobile */
+.crm-container.sidebar-open .nav-sidebar {
+    transform: translateX(0);
+}
+
+
 .nav-sidebar {
   width: 200px;
   background-color: var(--bg-light);
@@ -195,7 +201,7 @@ body.theme-dark .auth-logo path[fill="#010101"] {
   flex-shrink: 0;
   box-shadow: 4px 0 10px var(--shadow-medium);
   transition: background-color 0.3s, box-shadow 0.3s;
-  overflow: visible; /* Ensures SVG is not clipped */
+  overflow: visible;
 }
 
 body:not(.theme-green) .nav-sidebar {
@@ -970,5 +976,169 @@ body:not(.theme-green) .auth-box {
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+/* --- RESPONSIVE DESIGN --- */
+/* For screens smaller than 768px (common breakpoint for tablets/mobile) */
+@media (max-width: 768px) {
+  /* Basic Layout Adjustments */
+  .crm-container {
+    flex-direction: column; /* Stack sidebar and content vertically */
+    height: auto; /* Allow height to adjust to content */
+    min-height: 100vh; /* Ensure it still takes full viewport height if content is short */
+  }
+
+  .nav-sidebar {
+    width: 100%; /* Sidebar takes full width at the top */
+    height: 60px; /* Fixed height for a header bar */
+    padding: 10px 20px; /* Adjust padding */
+    flex-direction: row; /* Align items horizontally */
+    justify-content: space-between; /* Space out items */
+    align-items: center; /* Center items vertically */
+    box-shadow: 0 4px 10px var(--shadow-medium); /* Shadow at bottom */
+    position: relative; /* Ensure it stays in normal flow for now */
+    border-radius: 0; /* Remove border radius */
+    overflow: hidden; /* Hide overflow of content */
+  }
+  
+  .nav-sidebar .nav-logo {
+      width: 40px; /* Smaller logo for mobile header */
+      margin: 0; /* Remove auto margins */
+      order: 1; /* Place logo first */
+  }
+
+  /* Hide navigation links by default on mobile */
+  .nav-sidebar .nav-button:not(#theme-toggle-btn):not(#logout-btn) { /* Exclude theme/logout buttons for now */
+      display: none;
+  }
+  /* Show theme toggle and logout on mobile header if desired, adjust positioning */
+  .nav-sidebar #theme-toggle-btn,
+  .nav-sidebar #logout-btn {
+      margin: 0 5px; /* Adjust spacing */
+      padding: 8px 12px;
+      font-size: 14px;
+      order: 3; /* Place after hamburger */
+  }
+
+
+  .content-area {
+    width: 100%; /* Main content takes full width */
+    padding: 15px; /* Adjust padding */
+    height: auto; /* Allow content to dictate height */
+  }
+
+  /* Split views (Contacts, Accounts, Sequences) - stack them vertically */
+  .split-view {
+    flex-direction: column; /* Stack list and details vertically */
+    gap: 15px; /* Reduce gap */
+    height: auto; /* Allow height to adjust */
+  }
+
+  .item-list-container {
+    width: 100%; /* List takes full width */
+  }
+
+  .details-panel {
+    width: 100%; /* Details panel takes full width */
+    padding: 15px; /* Adjust padding */
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr; /* Stack form fields vertically */
+    gap: 0; /* Remove gap */
+  }
+
+  /* Tables: Ensure horizontal scrolling */
+  .table-container {
+    overflow-x: auto; /* Keep horizontal scroll for tables */
+  }
+
+  /* Hide the desktop nav-logo and show mobile-specific hamburger menu */
+  .nav-sidebar .nav-logo {
+      display: none; /* Hide standard nav logo when not in mobile header */
+  }
+
+  /* Hamburger Menu Styling */
+  .hamburger-menu {
+    display: flex; /* Show hamburger menu button on mobile */
+    flex-direction: column;
+    justify-content: space-around;
+    width: 30px;
+    height: 25px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 100; /* Ensure it's above other elements */
+    order: 2; /* Position it in the middle of the header */
+  }
+
+  .hamburger-menu .bar {
+    width: 100%;
+    height: 3px;
+    background-color: var(--text-light);
+    border-radius: 2px;
+    transition: all 0.3s ease-in-out;
+  }
+
+  /* Animation for Hamburger to Cross */
+  .crm-container.sidebar-open .hamburger-menu .bar:nth-child(1) {
+    transform: translateY(11px) rotate(45deg);
+  }
+  .crm-container.sidebar-open .hamburger-menu .bar:nth-child(2) {
+    opacity: 0;
+  }
+  .crm-container.sidebar-open .hamburger-menu .bar:nth-child(3) {
+    transform: translateY(-11px) rotate(-45deg);
+  }
+
+  /* Mobile Sidebar Styling when open */
+  .crm-container.sidebar-open .nav-sidebar {
+    width: 250px; /* Full width for the sliding menu */
+    height: 100vh; /* Take full height */
+    position: fixed; /* Fixed position for overlay */
+    top: 0;
+    left: 0;
+    flex-direction: column; /* Stack links vertically */
+    align-items: flex-start; /* Align links to the left */
+    padding-top: 80px; /* Space for logo/close button */
+    z-index: 99; /* Below modal, above content */
+    box-shadow: 4px 0 15px var(--shadow-strong);
+    transform: translateX(0); /* Slide in */
+  }
+  /* Hide specific elements from default nav-sidebar that should not be in mobile menu */
+  .nav-sidebar .nav-logo { /* The small logo on desktop sidebar should not be visible here */
+      display: none;
+  }
+  /* Make nav buttons visible in the opened sidebar */
+  .crm-container.sidebar-open .nav-sidebar .nav-button {
+      display: block; /* Show menu items */
+      width: 100%;
+      text-align: left;
+      margin: 5px 0;
+      padding: 12px 20px;
+  }
+  .crm-container.sidebar-open .nav-sidebar #theme-toggle-btn,
+  .crm-container.sidebar-open .nav-sidebar #logout-btn {
+      margin: 10px 0; /* Adjust spacing */
+      padding: 12px 20px;
+      width: 100%;
+  }
+}
+
+/* For very small screens (e.g., phones in portrait) */
+@media (max-width: 480px) {
+  .metric-card {
+    min-width: 150px; /* Adjust minimum width for metric cards */
+    padding: 15px;
+  }
+  .metric-value {
+    font-size: 28px; /* Smaller font for values */
+  }
+  .metric-quota-percent {
+    font-size: 18px; /* Smaller font for percentages */
+  }
+  .metric-total-quota-display {
+    font-size: 14px;
   }
 }
