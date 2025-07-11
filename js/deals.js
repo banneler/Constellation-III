@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const metricFunnel = document.getElementById("metric-funnel");
   const viewMyDealsBtn = document.getElementById("view-my-deals-btn");
   const viewAllDealsBtn = document.getElementById("view-all-deals-btn");
+  const dealsViewToggleDiv = document.querySelector('.deals-view-toggle'); // NEW: Selector for the toggle container
 
   // --- Theme Toggle Logic ---
   let currentThemeIndex = 0;
@@ -46,6 +47,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!state.currentUser) return;
 
     const dealsQuery = supabase.from("deals").select("*");
+    // Only apply user_id filter if in 'mine' mode AND not a manager (to allow managers to see 'all' by default)
+    // Or, more simply, filter only if mode is 'mine'
     if (state.dealsViewMode === 'mine') {
         dealsQuery.eq("user_id", state.currentUser.id);
     }
@@ -59,7 +62,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const allTableNames = ["deals", ...userSpecificTables];
 
     try {
-      const results = await Promise.allSettled(promises);
+      const results = await Promise.allSettled(allPromises);
       results.forEach((result, index) => {
         const tableName = allTableNames[index];
         if (result.status === "fulfilled") {
@@ -69,8 +72,8 @@ document.addEventListener("DOMContentLoaded", async () => {
               result.value.error.message
             );
             state[tableName] = [];
-            // Specific alert for RLS if in 'all' mode
-            if (tableName === 'deals' && state.dealsViewMode === 'all' && result.value.error.code === '42501') {
+            // Specific alert for RLS if in 'all' mode AND manager view is enabled
+            if (tableName === 'deals' && state.dealsViewMode === 'all' && result.value.error.code === '42501' && dealsViewToggleDiv && !dealsViewToggleDiv.classList.contains('hidden')) {
                 alert("RLS Warning: You might not have permission to view other users' deals. Please check Supabase RLS policies for the 'deals' table if you expect to see more data.");
             }
           } else {
@@ -129,7 +132,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         deal.id
       }">Edit</button></td>`;
     });
-    // Ensure active class for sorting arrows is applied on render
     document.querySelectorAll("#deals-table th.sortable").forEach((th) => {
       th.classList.remove("asc", "desc");
       if (th.dataset.sort === state.dealsSortBy) {
@@ -270,12 +272,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // NEW: Deals View Toggle Event Listeners
+  // Deals View Toggle Event Listeners
   if (viewMyDealsBtn) {
     viewMyDealsBtn.addEventListener('click', async () => {
-      console.log("View My Deals button clicked."); // ADDED LOG
+      console.log("View My Deals button clicked.");
       state.dealsViewMode = 'mine';
-      console.log("dealsViewMode set to:", state.dealsViewMode); // ADDED LOG
+      console.log("dealsViewMode set to:", state.dealsViewMode);
       viewMyDealsBtn.classList.add('active');
       viewAllDealsBtn.classList.remove('active');
       await loadAllData();
@@ -284,9 +286,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (viewAllDealsBtn) {
     viewAllDealsBtn.addEventListener('click', async () => {
-      console.log("View All Deals button clicked."); // ADDED LOG
+      console.log("View All Deals button clicked.");
       state.dealsViewMode = 'all';
-      console.log("dealsViewMode set to:", state.dealsViewMode); // ADDED LOG
+      console.log("dealsViewMode set to:", state.dealsViewMode);
       viewAllDealsBtn.classList.add('active');
       viewMyDealsBtn.classList.remove('active');
       await loadAllData();
@@ -303,6 +305,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   const { data: { session } } = await supabase.auth.getSession();
   if (session) {
     state.currentUser = session.user;
+    // NEW: Conditional display for manager toggle buttons
+    if (dealsViewToggleDiv) { // Ensure the div exists
+        // Check if user_metadata exists and is_manager is true
+        const isManager = state.currentUser.user_metadata?.is_manager === true;
+        if (!isManager) {
+            dealsViewToggleDiv.classList.add('hidden'); // Hide if not manager
+            state.dealsViewMode = 'mine'; // Force to 'mine' view if not manager
+        } else {
+            dealsViewToggleDiv.classList.remove('hidden'); // Ensure visible if manager
+            // If manager, default to 'mine' initially, but allow them to click 'all'
+            viewMyDealsBtn.classList.add('active'); // Ensure 'My Deals' is active on manager load
+            viewAllDealsBtn.classList.remove('active');
+        }
+    }
     await loadAllData(); // Initial data load on page entry
   } else {
     window.location.href = "index.html"; // Redirect if not signed in
