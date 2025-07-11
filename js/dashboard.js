@@ -495,7 +495,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const targetButton = e.target;
     // Handlers for "My Tasks" buttons
     if (targetButton.classList.contains('mark-task-complete-btn')) {
-        const taskId = Number(targetButton.dataset.taskId);
+    const taskId = targetButton.dataset.taskId; // This keeps it as a UUID string
         showModal('Confirm Completion', 'Mark this task as completed?', async () => {
             console.log(`Marking task ${taskId} as complete.`);
             const { error } = await supabase.from('tasks').update({ status: 'Completed' }).eq('id', taskId);
