@@ -87,3 +87,20 @@ export const setupModalListeners = () => {
         modalCancelBtn.addEventListener("click", hideModal);
     }
 };
+// Add this new function to the end of shared_constants.js
+
+export function updateActiveNavLink() {
+  const currentPath = window.location.pathname.split('/').pop(); // Gets "command-center.html", etc.
+  if (!currentPath) return;
+
+  const navLinks = document.querySelectorAll('.nav-sidebar .nav-button');
+
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    const linkPath = link.getAttribute('href');
+
+    if (linkPath && linkPath.includes(currentPath)) {
+      link.classList.add('active');
+    }
+  });
+}
