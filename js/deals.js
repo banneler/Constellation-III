@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const metricFunnel = document.getElementById("metric-funnel");
   const viewMyDealsBtn = document.getElementById("view-my-deals-btn");
   const viewAllDealsBtn = document.getElementById("view-all-deals-btn");
-  const dealsViewToggleDiv = document.querySelector('.deals-view-toggle'); // NEW: Selector for the toggle container
+  const dealsViewToggleDiv = document.querySelector('.deals-view-toggle');
 
   // --- Theme Toggle Logic ---
   let currentThemeIndex = 0;
@@ -47,22 +47,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!state.currentUser) return;
 
     const dealsQuery = supabase.from("deals").select("*");
-    // Only apply user_id filter if in 'mine' mode AND not a manager (to allow managers to see 'all' by default)
-    // Or, more simply, filter only if mode is 'mine'
     if (state.dealsViewMode === 'mine') {
         dealsQuery.eq("user_id", state.currentUser.id);
     }
-    // RLS NOTE: If RLS on 'deals' table only allows 'auth.uid() = user_id',
-    // fetching 'all' will still only return the current user's deals unless RLS is updated.
 
-    const userSpecificTables = ["accounts"]; // Accounts are still always user-specific
+    const userSpecificTables = ["accounts"];
     const promises = [dealsQuery, ...userSpecificTables.map((table) =>
       supabase.from(table).select("*").eq("user_id", state.currentUser.id)
     )];
     const allTableNames = ["deals", ...userSpecificTables];
 
     try {
-      const results = await Promise.allSettled(allPromises);
+      const results = await Promise.allSettled(promises);
       results.forEach((result, index) => {
         const tableName = allTableNames[index];
         if (result.status === "fulfilled") {
@@ -72,11 +68,12 @@ document.addEventListener("DOMContentLoaded", async () => {
               result.value.error.message
             );
             state[tableName] = [];
-            // Specific alert for RLS if in 'all' mode AND manager view is enabled
             if (tableName === 'deals' && state.dealsViewMode === 'all' && result.value.error.code === '42501' && dealsViewToggleDiv && !dealsViewToggleDiv.classList.contains('hidden')) {
                 alert("RLS Warning: You might not have permission to view other users' deals. Please check Supabase RLS policies for the 'deals' table if you expect to see more data.");
             }
           } else {
+            // NEW LOG: Check the data being fetched
+            console.log(`loadAllData: Fetched ${tableName} data:`, result.value.data);
             state[tableName] = result.value.data || [];
           }
         } else {
@@ -95,6 +92,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   // --- Render Functions (Deals specific) ---
   const renderDealsPage = () => {
     if (!dealsTableBody) return;
+    // ADDED LOG: Check state.deals before rendering
+    console.log("renderDealsPage: state.deals before rendering:", state.deals);
+
     const dealsWithAccount = state.deals.map((deal) => {
       const account = state.accounts.find((a) => a.id === deal.account_id);
       return { ...deal,
@@ -305,22 +305,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   const { data: { session } } = await supabase.auth.getSession();
   if (session) {
     state.currentUser = session.user;
-    // NEW: Conditional display for manager toggle buttons
-    if (dealsViewToggleDiv) { // Ensure the div exists
-        // Check if user_metadata exists and is_manager is true
+    // Conditional display for manager toggle buttons
+    if (dealsViewToggleDiv) {
         const isManager = state.currentUser.user_metadata?.is_manager === true;
         if (!isManager) {
-            dealsViewToggleDiv.classList.add('hidden'); // Hide if not manager
+            dealsViewToggleDiv.classList.add('hidden');
             state.dealsViewMode = 'mine'; // Force to 'mine' view if not manager
         } else {
-            dealsViewToggleDiv.classList.remove('hidden'); // Ensure visible if manager
-            // If manager, default to 'mine' initially, but allow them to click 'all'
-            viewMyDealsBtn.classList.add('active'); // Ensure 'My Deals' is active on manager load
+            dealsViewToggleDiv.classList.remove('hidden');
+            // Ensure 'My Deals' is active on manager load by default, but allow toggle
+            viewMyDealsBtn.classList.add('active');
             viewAllDealsBtn.classList.remove('active');
         }
     }
-    await loadAllData(); // Initial data load on page entry
+    await loadAllData();
   } else {
-    window.location.href = "index.html"; // Redirect if not signed in
+    window.location.href = "index.html";
   }
 });
