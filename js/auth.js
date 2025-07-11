@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       console.log("Login successful. Redirecting to dashboard.html."); // Debugging log
       authForm.reset();
-      window.location.href = "dashboard.html";
+      window.location.href = "command-center.html";
     }
   });
 
