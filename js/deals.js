@@ -1,4 +1,4 @@
-// js/deals.js (full updated code)
+// js/deals.js
 import { SUPABASE_URL, SUPABASE_ANON_KEY, MONTHLY_QUOTA, formatMonthYear, formatCurrencyK, themes, setupModalListeners, showModal, hideModal } from './shared_constants.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -9,12 +9,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     deals: [],
     accounts: [], // Needed to display account names in deals table
     dealsSortBy: "name",
-    dealsSortDir: "asc"
+    dealsSortDir: "asc",
+    dealsViewMode: 'mine' // NEW: 'mine' or 'all'
   };
 
   // --- DOM Element Selectors (Deals specific) ---
   const logoutBtn = document.getElementById("logout-btn");
-  // const debugBtn = document.getElementById("debug-btn"); // REMOVE THIS LINE
   const dealsTable = document.getElementById("deals-table");
   const dealsTableBody = document.querySelector("#deals-table tbody");
   const themeToggleBtn = document.getElementById("theme-toggle-btn");
@@ -22,6 +22,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const metricCurrentCommit = document.getElementById("metric-current-commit");
   const metricBestCase = document.getElementById("metric-best-case");
   const metricFunnel = document.getElementById("metric-funnel");
+  const viewMyDealsBtn = document.getElementById("view-my-deals-btn");   // NEW: My Deals button
+  const viewAllDealsBtn = document.getElementById("view-all-deals-btn"); // NEW: All Users' Deals button
 
   // --- Theme Toggle Logic ---
   let currentThemeIndex = 0;
@@ -43,28 +45,40 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function loadAllData() {
     if (!state.currentUser) return;
 
-    const userSpecificTables = ["deals", "accounts"];
+    // UPDATED: Modify deals fetch based on dealsViewMode
+    const dealsQuery = supabase.from("deals").select("*");
+    if (state.dealsViewMode === 'mine') {
+        dealsQuery.eq("user_id", state.currentUser.id);
+    }
+    // IMPORTANT RLS NOTE: If RLS on 'deals' table only allows 'auth.uid() = user_id',
+    // fetching 'all' will still only return the current user's deals unless RLS is updated.
 
-    const promises = userSpecificTables.map((table) =>
+    const userSpecificTables = ["accounts"]; // Accounts are still always user-specific
+    const promises = [dealsQuery, ...userSpecificTables.map((table) =>
       supabase.from(table).select("*").eq("user_id", state.currentUser.id)
-    );
+    )];
+    const allTableNames = ["deals", ...userSpecificTables];
 
     try {
       const results = await Promise.allSettled(promises);
       results.forEach((result, index) => {
-        const tableName = userSpecificTables[index];
+        const tableName = allTableNames[index];
         if (result.status === "fulfilled") {
           if (result.value.error) {
             console.error(
-              `Supabase error fetching ${tableName}:`,
+              `loadAllData: Supabase error fetching ${tableName}:`,
               result.value.error.message
             );
             state[tableName] = [];
+            // Specific alert for RLS if in 'all' mode
+            if (tableName === 'deals' && state.dealsViewMode === 'all' && result.value.error.code === '42501') {
+                alert("RLS Warning: You might not have permission to view other users' deals. Please check Supabase RLS policies for the 'deals' table if you expect to see more data.");
+            }
           } else {
             state[tableName] = result.value.data || [];
           }
         } else {
-          console.error(`Failed to fetch ${tableName}:`, result.reason);
+          console.error(`loadAllData: Failed to fetch ${tableName}:`, result.reason);
           state[tableName] = [];
         }
       });
@@ -131,6 +145,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     let currentCommit = 0;
     let bestCase = 0;
     let totalFunnel = 0;
+    // UPDATED: Metrics calculations now apply to currently displayed deals (state.deals)
+    // regardless of whether it's 'mine' or 'all'
     state.deals.forEach((deal) => {
       const dealCloseDate = deal.close_month ?
         new Date(deal.close_month) :
@@ -164,7 +180,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     ).textContent = `${bestCasePercentage}%`;
   };
 
-  // --- Event Listener Setup (Deals specific) ---
+  // --- Event Listener Setup ---
   setupModalListeners();
 
   themeToggleBtn.addEventListener("click", cycleTheme);
@@ -173,11 +189,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     await supabase.auth.signOut();
     window.location.href = "index.html";
   });
-
-  // debugBtn.addEventListener("click", () => { // REMOVE THIS LISTENER
-  //   console.log(JSON.stringify(state, null, 2));
-  //   alert("Current app state logged to console (F12).");
-  // });
 
   dealsTable.querySelector("thead").addEventListener("click", (e) => {
     const th = e.target.closest("th");
@@ -236,43 +247,3 @@ document.addEventListener("DOMContentLoaded", async () => {
             products: document.getElementById("modal-edit-deal-products")
               .value
           };
-          if (!updatedDeal.name || isNaN(updatedDeal.mrc)) {
-            alert("Deal Name and MRC are required.");
-            return;
-          }
-          await supabase.from("deals").update(updatedDeal).eq("id", deal.id);
-          await loadAllData();
-          hideModal();
-        }
-      );
-      document.getElementById("modal-edit-deal-stage").value = deal.stage;
-    }
-  });
-
-  dealsTable.addEventListener("click", (e) => {
-    const targetLink = e.target.closest(".deal-name-link");
-    if (targetLink) {
-      const dealId = Number(targetLink.dataset.dealId);
-      const deal = state.deals.find((d) => d.id === dealId);
-      if (deal && deal.account_id) {
-        // Redirect to accounts page with the accountId
-        window.location.href = `accounts.html?accountId=${deal.account_id}`;
-      }
-    }
-  });
-
-  // --- App Initialization (Deals Page) ---
-  const savedTheme = localStorage.getItem('crm-theme') || 'dark';
-  const savedThemeIndex = themes.indexOf(savedTheme);
-  currentThemeIndex = savedThemeIndex !== -1 ? savedThemeIndex : 0;
-  applyTheme(themes[currentThemeIndex]);
-
-  // Check user session on page load
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) {
-    state.currentUser = session.user;
-    await loadAllData();
-  } else {
-    window.location.href = "index.html"; // Redirect to auth page if not signed in
-  }
-});
