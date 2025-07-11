@@ -200,7 +200,7 @@ body.theme-dark .auth-logo path[fill="#010101"] {
   flex-direction: column;
   flex-shrink: 0;
   box-shadow: 4px 0 10px var(--shadow-medium);
-  transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s ease-in-out; /* Added transform transition */
+  transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s ease-in-out;
   overflow-y: auto; /* Allow sidebar content to scroll */
 }
 
@@ -1009,8 +1009,8 @@ body:not(.theme-green) .auth-box {
   /* Mobile Header Bar Elements Ordering & Sizing */
   .nav-sidebar .nav-logo { /* The SVG logo becomes smaller in the mobile header */
       display: block; /* Ensure it's visible */
-      width: 40px;
-      height: 40px;
+      width: 50px; /* INCREASED SIZE */
+      height: 50px; /* INCREASED SIZE */
       margin: 0;
       order: 1; /* Place logo first */
   }
@@ -1098,11 +1098,10 @@ body:not(.theme-green) .auth-box {
       height: auto; /* Adjust height automatically */
       margin: 0 auto 20px auto; /* Center with bottom margin */
   }
-  /* Adjust placement of theme toggle and logout inside the opened sidebar */
+  /* NEW: Hide Theme and Logout buttons when sidebar is open as an overlay */
   .crm-container.sidebar-open .nav-sidebar #theme-toggle-btn,
   .crm-container.sidebar-open .nav-sidebar #logout-btn {
-      margin-top: auto; /* Push to bottom */
-      order: unset; /* Reset order */
+      display: none !important; /* Hide these when sidebar is full overlay */
   }
 }
 
