@@ -1,5 +1,4 @@
 /* --- THEME DEFINITIONS --- */
-
 /* Default variables for fallback */
 :root {
   --bg-dark: #2e2e2e;
@@ -111,7 +110,6 @@ body.theme-green {
   animation: flicker 0.15s infinite;
 }
 
-/* Green theme specific scanlines */
 body.theme-green::before {
   content: " ";
   display: block;
@@ -166,13 +164,10 @@ body.theme-green::before {
   transition: fill 0.3s;
 }
 
-/* --- FIX FOR DARK THEME LOGO --- */
 body.theme-dark .nav-logo path[fill="#010101"],
 body.theme-dark .auth-logo path[fill="#010101"] {
   fill: #FFFFFF !important;
 }
-/* --- END FIX FOR DARK THEME LOGO --- */
-
 
 /* --- MAIN LAYOUT --- */
 .crm-container {
@@ -195,7 +190,7 @@ body.theme-dark .auth-logo path[fill="#010101"] {
   flex-shrink: 0;
   box-shadow: 4px 0 10px var(--shadow-medium);
   transition: background-color 0.3s, box-shadow 0.3s;
-  overflow: visible; /* Ensures SVG is not clipped */
+  overflow: visible;
 }
 
 body:not(.theme-green) .nav-sidebar {
@@ -225,28 +220,26 @@ body:not(.theme-green) .nav-button {
   transform: translateX(3px);
 }
 
-/* General Active Button Styling (for nav buttons and new toggle buttons) */
 .nav-button.active,
-.btn-secondary.active { /* TARGETS ACTIVE SECONDARY BUTTONS LIKE THE TOGGLE */
-  background-color: var(--primary-blue); /* Distinct background color */
-  color: var(--text-light); /* Light text for contrast */
-  font-weight: bold; /* Make text bold */
-  border: 1px solid var(--primary-blue); /* Add a border */
-  box-shadow: 0 0 10px rgba(74, 144, 226, 0.6); /* Clearer shadow/glow */
-  transform: translateY(-1px); /* Slight lift for active state */
+.btn-secondary.active {
+  background-color: var(--primary-blue);
+  color: var(--text-light);
+  font-weight: bold;
+  border: 1px solid var(--primary-blue);
+  box-shadow: 0 0 10px rgba(74, 144, 226, 0.6);
+  transform: translateY(-1px);
 }
 
 body.theme-dark .nav-button.active {
   background: linear-gradient(45deg, #3a7bd5, #00d2ff);
 }
 
-/* FIX: Active nav button & active secondary button for Green Theme */
 body.theme-green .nav-button.active,
 body.theme-green .btn-secondary.active {
-  background-color: transparent; /* Keep transparent as per green theme style */
-  border: 1px solid var(--text-light); /* Bright green border */
-  color: var(--text-light); /* Bright green text */
-  box-shadow: 0 0 10px rgba(0, 255, 65, 0.6); /* Green glowing shadow */
+  background-color: transparent;
+  border: 1px solid var(--text-light);
+  color: var(--text-light);
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.6);
 }
 
 
@@ -256,31 +249,36 @@ body.theme-green .btn-secondary.active {
   overflow-y: auto;
 }
 
-.content-view {
-  display: none;
+/* --- DOWNLOADS SECTION --- */
+.downloads-section {
+  margin-top: 40px;
+  padding: 20px;
+  background-color: var(--bg-light);
+  border: 1px solid var(--border-color);
+  transition: background-color 0.3s, border-color 0.3s;
 }
 
-.content-view.active-view {
-  display: block;
+body:not(.theme-green) .downloads-section {
+    border-radius: 8px;
 }
 
-h2,
-h3,
-h4 {
-  margin-top: 0;
-  padding-bottom: 10px;
-  text-shadow: 1px 1px 2px var(--shadow-light);
-  transition: border-color 0.3s;
+.downloads-section h4 {
+    margin-top: 0;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 10px;
 }
 
-h2 {
-  border-bottom: 2px solid var(--primary-blue);
+.downloads-links {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
 }
 
-h4 {
-  border-bottom: 1px solid var(--border-color);
-  margin-bottom: 10px;
+.downloads-links a {
+    text-decoration: none;
 }
+
 
 /* --- UI COMPONENTS --- */
 .split-view {
@@ -483,7 +481,6 @@ body:not(.theme-green) .btn-secondary {
   border-radius: 5px;
 }
 
-
 .btn-primary {
   background-color: var(--primary-blue);
   box-shadow: 0 2px 5px var(--shadow-medium);
@@ -499,13 +496,11 @@ body:not(.theme-green) .btn-secondary {
   box-shadow: 0 2px 5px var(--shadow-medium);
 }
 
-/* FIX: Button legibility for Green Theme */
 body.theme-green .btn-primary {
   background-color: var(--secondary-gray);
   color: var(--text-light);
 }
 
-/* FIX: Danger button style for Green Theme */
 body.theme-green .btn-danger {
   background-color: transparent;
   border: 1px solid var(--danger-red);
@@ -763,7 +758,6 @@ body:not(.theme-green) #contact-activities-list li {
   vertical-align: middle;
 }
 
-/* New SVG icon styling (from earlier attempt) */
 .sequence-status-icon-svg {
   display: inline-flex;
   align-items: center;
@@ -781,7 +775,6 @@ body:not(.theme-green) #contact-activities-list li {
   color: var(--completed-color);
 }
 
-/* If you want different color for the dollar sign based on theme */
 body.theme-dark .sequence-status-icon-svg-inner {
     color: var(--completed-color);
 }
@@ -793,7 +786,6 @@ body.theme-light .sequence-status-icon-svg-inner {
 body.theme-green .sequence-status-icon-svg-inner {
     color: var(--text-light);
 }
-
 
 /* --- DEALS METRICS --- */
 .deals-metrics-container {
