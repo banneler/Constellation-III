@@ -91,16 +91,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     async function completeStep(csId) {
         const cs = state.contact_sequences.find((c) => c.id === csId);
         if (!cs) return;
-
         const contact = state.contacts.find((c) => c.id === cs.contact_id);
         const step = state.sequence_steps.find(s => s.sequence_id === cs.sequence_id && s.step_number === cs.current_step_number);
-
         if (contact && step) {
             await supabase.from("activities").insert([{ contact_id: contact.id, account_id: contact.account_id, date: new Date().toISOString(), type: `Sequence: ${step.type}`, description: step.subject || step.message || "Completed step", user_id: state.currentUser.id }]);
         }
-
         const nextStep = state.sequence_steps.find(s => s.sequence_id === cs.sequence_id && s.step_number === cs.current_step_number + 1);
-
         if (nextStep) {
             await supabase.from("contact_sequences").update({ current_step_number: nextStep.step_number, last_completed_date: new Date().toISOString(), next_step_due_date: addDays(new Date(), nextStep.delay_days).toISOString() }).eq("id", cs.id);
         } else {
@@ -109,7 +105,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         await loadAllData();
     }
 
-
     // --- Render Function ---
     function renderDashboard() {
         if (!myTasksTable || !dashboardTable || !allTasksTable || !recentActivitiesTable) return;
@@ -117,34 +112,36 @@ document.addEventListener("DOMContentLoaded", async () => {
         dashboardTable.innerHTML = "";
         allTasksTable.innerHTML = "";
         recentActivitiesTable.innerHTML = "";
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        
+        // Use UTC date strings for reliable comparison
+        const todayUTCString = new Date().toISOString().slice(0, 10);
 
         // Render My Tasks
-        state.tasks
-            .filter(task => task.status === 'Pending')
-            .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
-            .forEach(task => {
-                const row = myTasksTable.insertRow();
-                let linkedEntity = 'N/A';
-                if (task.contact_id) {
-                    const contact = state.contacts.find(c => c.id === task.contact_id);
-                    if (contact) linkedEntity = `<a href="contacts.html?contactId=${contact.id}" class="contact-name-link">${contact.first_name} ${contact.last_name}</a> (Contact)`;
-                } else if (task.account_id) {
-                    const account = state.accounts.find(a => a.id === task.account_id);
-                    if(account) linkedEntity = `<a href="accounts.html?accountId=${account.id}" class="contact-name-link">${account.name}</a> (Account)`;
-                }
-                row.innerHTML = `<td>${formatDate(task.due_date)}</td><td>${task.description}</td><td>${linkedEntity}</td>
-                    <td>
-                        <button class="btn-primary mark-task-complete-btn" data-task-id="${task.id}">Complete</button>
-                        <button class="btn-secondary edit-task-btn" data-task-id="${task.id}">Edit</button>
-                        <button class="btn-danger delete-task-btn" data-task-id="${task.id}">Delete</button>
-                    </td>`;
-            });
+        state.tasks.filter(task => task.status === 'Pending').sort((a, b) => new Date(a.due_date) - new Date(b.due_date)).forEach(task => {
+            const row = myTasksTable.insertRow();
+            let linkedEntity = 'N/A';
+            if (task.contact_id) {
+                const contact = state.contacts.find(c => c.id === task.contact_id);
+                if (contact) linkedEntity = `<a href="contacts.html?contactId=${contact.id}" class="contact-name-link">${contact.first_name} ${contact.last_name}</a> (Contact)`;
+            } else if (task.account_id) {
+                const account = state.accounts.find(a => a.id === task.account_id);
+                if(account) linkedEntity = `<a href="accounts.html?accountId=${account.id}" class="contact-name-link">${account.name}</a> (Account)`;
+            }
+            row.innerHTML = `<td>${formatDate(task.due_date)}</td><td>${task.description}</td><td>${linkedEntity}</td>
+                <td>
+                    <button class="btn-primary mark-task-complete-btn" data-task-id="${task.id}">Complete</button>
+                    <button class="btn-secondary edit-task-btn" data-task-id="${task.id}">Edit</button>
+                    <button class="btn-danger delete-task-btn" data-task-id="${task.id}">Delete</button>
+                </td>`;
+        });
 
-        // Render Sequence Steps Due
+        // Render Sequence Steps Due (with corrected filter)
         state.contact_sequences
-            .filter(cs => new Date(cs.next_step_due_date) <= today && cs.status === "Active")
+            .filter(cs => {
+                // Compare just the YYYY-MM-DD part of the dates
+                const dueDateString = cs.next_step_due_date.slice(0, 10);
+                return dueDateString <= todayUTCString && cs.status === "Active";
+            })
             .sort((a, b) => new Date(a.next_step_due_date) - new Date(b.next_step_due_date))
             .forEach(cs => {
                 const contact = state.contacts.find(c => c.id === cs.contact_id);
@@ -163,7 +160,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // Render Upcoming Sequence Tasks
         state.contact_sequences
-            .filter(cs => cs.status === "Active")
+            .filter(cs => {
+                const dueDateString = cs.next_step_due_date.slice(0, 10);
+                return dueDateString > todayUTCString && cs.status === "Active";
+            })
             .sort((a, b) => new Date(a.next_step_due_date) - new Date(b.next_step_due_date))
             .forEach(cs => {
                 const contact = state.contacts.find(c => c.id === cs.contact_id);
@@ -185,7 +185,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             });
     }
 
-    // --- EVENT LISTENER SETUP (with all logic restored) ---
+    // --- EVENT LISTENER SETUP ---
     function setupPageEventListeners() {
         setupModalListeners();
         themeToggleBtn.addEventListener("click", cycleTheme);
@@ -193,11 +193,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             await supabase.auth.signOut();
             window.location.href = "index.html";
         });
-
         addNewTaskBtn.addEventListener('click', () => {
             const contactsOptions = state.contacts.map(c => `<option value="c-${c.id}">${c.first_name} ${c.last_name} (Contact)</option>`).join('');
             const accountsOptions = state.accounts.map(a => `<option value="a-${a.id}">${a.name} (Account)</option>`).join('');
-            
             showModal('Add New Task', `
                 <label>Description:</label><input type="text" id="modal-task-description" required>
                 <label>Due Date:</label><input type="date" id="modal-task-due-date">
@@ -211,50 +209,36 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const description = document.getElementById('modal-task-description').value.trim();
                 const dueDate = document.getElementById('modal-task-due-date').value;
                 const linkedEntityValue = document.getElementById('modal-task-linked-entity').value;
-                
                 if (!description) { alert('Description is required.'); return; }
-                
                 const taskData = { description, due_date: dueDate || null, user_id: state.currentUser.id, status: 'Pending' };
-                if (linkedEntityValue.startsWith('c-')) {
-                    taskData.contact_id = Number(linkedEntityValue.substring(2));
-                } else if (linkedEntityValue.startsWith('a-')) {
-                    taskData.account_id = Number(linkedEntityValue.substring(2));
-                }
-
+                if (linkedEntityValue.startsWith('c-')) { taskData.contact_id = Number(linkedEntityValue.substring(2)); } 
+                else if (linkedEntityValue.startsWith('a-')) { taskData.account_id = Number(linkedEntityValue.substring(2)); }
                 const { error } = await supabase.from('tasks').insert(taskData);
                 if (error) { alert('Error adding task: ' + error.message); } 
                 else { await loadAllData(); hideModal(); }
             });
         });
-
-        // Event delegation for dynamically created buttons in tables
         document.body.addEventListener('click', async (e) => {
             const button = e.target.closest('button');
             if (!button) return;
-
-            // My Tasks buttons
             if (button.matches('.mark-task-complete-btn')) {
                 const taskId = button.dataset.taskId;
                 showModal('Confirm Completion', 'Mark this task as completed?', async () => {
                     await supabase.from('tasks').update({ status: 'Completed' }).eq('id', taskId);
-                    await loadAllData();
-                    hideModal();
+                    await loadAllData(); hideModal();
                 });
             } else if (button.matches('.delete-task-btn')) {
                 const taskId = button.dataset.taskId;
                 showModal('Confirm Deletion', 'Are you sure you want to delete this task?', async () => {
                     await supabase.from('tasks').delete().eq('id', taskId);
-                    await loadAllData();
-                    hideModal();
+                    await loadAllData(); hideModal();
                 });
             } else if (button.matches('.edit-task-btn')) {
                 const taskId = button.dataset.taskId;
                 const task = state.tasks.find(t => t.id == taskId);
                 if (!task) { alert('Task not found.'); return; }
-
                 const contactsOptions = state.contacts.map(c => `<option value="c-${c.id}" ${c.id === task.contact_id ? 'selected' : ''}>${c.first_name} ${c.last_name} (Contact)</option>`).join('');
                 const accountsOptions = state.accounts.map(a => `<option value="a-${a.id}" ${a.id === task.account_id ? 'selected' : ''}>${a.name} (Account)</option>`).join('');
-
                 showModal('Edit Task', `
                     <label>Description:</label><input type="text" id="modal-task-description" value="${task.description}" required>
                     <label>Due Date:</label><input type="date" id="modal-task-due-date" value="${task.due_date ? task.due_date.substring(0, 10) : ''}">
@@ -269,19 +253,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                     const newDueDate = document.getElementById('modal-task-due-date').value;
                     const linkedEntityValue = document.getElementById('modal-task-linked-entity').value;
                     if (!newDescription) { alert('Task description is required.'); return; }
-
                     const updateData = { description: newDescription, due_date: newDueDate || null, contact_id: null, account_id: null };
                     if (linkedEntityValue.startsWith('c-')) { updateData.contact_id = Number(linkedEntityValue.substring(2)); } 
                     else if (linkedEntityValue.startsWith('a-')) { updateData.account_id = Number(linkedEntityValue.substring(2)); }
-                    
                     await supabase.from('tasks').update(updateData).eq('id', taskId);
-                    await loadAllData();
-                    hideModal();
+                    await loadAllData(); hideModal();
                 });
-            }
-
-            // Sequence Steps Due buttons (Corrected and Added Back)
-            else if (button.matches('.complete-step-btn')) {
+            } else if (button.matches('.complete-step-btn')) {
                  const csId = Number(button.dataset.id);
                  completeStep(csId);
             } else if (button.matches('.send-email-btn')) {
@@ -295,10 +273,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const mailtoLink = `mailto:${contact.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
                 window.open(mailtoLink, "_blank");
                 completeStep(csId);
-            }
-            
-            // Upcoming Sequence Tasks buttons
-            else if (button.matches('.revisit-step-btn')) {
+            } else if (button.matches('.revisit-step-btn')) {
                 const csId = Number(button.dataset.csId);
                 const contactSequence = state.contact_sequences.find(cs => cs.id === csId);
                 if (!contactSequence) return;
@@ -318,9 +293,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const savedThemeIndex = themes.indexOf(savedTheme);
         currentThemeIndex = savedThemeIndex !== -1 ? savedThemeIndex : 0;
         applyTheme(themes[currentThemeIndex]);
-        
         updateActiveNavLink();
-
         supabase.auth.getSession().then(async ({ data: { session } }) => {
             if (session) {
                 state.currentUser = session.user;
