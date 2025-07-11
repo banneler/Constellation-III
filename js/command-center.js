@@ -14,10 +14,8 @@ import {
 } from './shared_constants.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
-    // --- Initialize Supabase client ---
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // --- State Management ---
     let state = {
         currentUser: null,
         contacts: [],
@@ -44,36 +42,31 @@ document.addEventListener("DOMContentLoaded", async () => {
     let currentThemeIndex = 0;
     function applyTheme(themeName) {
         if (!themeNameSpan) return;
-        document.body.className = ''; // Clear all previous theme classes
+        document.body.className = '';
         document.body.classList.add(`theme-${themeName}`);
         const capitalizedThemeName = themeName.charAt(0).toUpperCase() + themeName.slice(1);
         themeNameSpan.textContent = capitalizedThemeName;
         localStorage.setItem('crm-theme', themeName);
     }
-
     function cycleTheme() {
         currentThemeIndex = (currentThemeIndex + 1) % themes.length;
         const newTheme = themes[currentThemeIndex];
         applyTheme(newTheme);
     }
-    
+
     // --- Data Fetching ---
     async function loadAllData() {
         if (!state.currentUser) return;
-        
         const userSpecificTables = ["contacts", "accounts", "sequences", "activities", "contact_sequences", "deals", "tasks"];
         const publicTables = ["sequence_steps"];
-
         const userPromises = userSpecificTables.map((table) =>
             supabase.from(table).select("*").eq("user_id", state.currentUser.id)
         );
         const publicPromises = publicTables.map((table) =>
             supabase.from(table).select("*")
         );
-
         const allPromises = [...userPromises, ...publicPromises];
         const allTableNames = [...userSpecificTables, ...publicTables];
-
         try {
             const results = await Promise.allSettled(allPromises);
             results.forEach((result, index) => {
@@ -92,13 +85,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    // --- Render Functions ---
+    // --- RENDER FUNCTION (with all table logic restored) ---
     function renderDashboard() {
         if (!dashboardTable || !recentActivitiesTable || !allTasksTable || !myTasksTable) return;
-        dashboardTable.innerHTML = "";
-        recentActivitiesTable.innerHTML = "";
-        allTasksTable.innerHTML = "";
         myTasksTable.innerHTML = "";
+        dashboardTable.innerHTML = "";
+        allTasksTable.innerHTML = "";
+        recentActivitiesTable.innerHTML = "";
+
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
@@ -113,18 +107,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                     const contact = state.contacts.find(c => c.id === task.contact_id);
                     if (contact) linkedEntity = `<a href="contacts.html?contactId=${contact.id}" class="contact-name-link">${contact.first_name} ${contact.last_name}</a> (Contact)`;
                 }
-                // (Add similar logic for account_id and deal_id if needed)
-                
-                row.innerHTML = `
-                    <td>${formatDate(task.due_date)}</td>
-                    <td>${task.description}</td>
-                    <td>${linkedEntity}</td>
+                row.innerHTML = `<td>${formatDate(task.due_date)}</td><td>${task.description}</td><td>${linkedEntity}</td>
                     <td>
                         <button class="btn-primary mark-task-complete-btn" data-task-id="${task.id}">Complete</button>
                         <button class="btn-secondary edit-task-btn" data-task-id="${task.id}">Edit</button>
                         <button class="btn-danger delete-task-btn" data-task-id="${task.id}">Delete</button>
-                    </td>
-                `;
+                    </td>`;
             });
 
         // Render "Sequence Steps Due"
@@ -132,12 +120,48 @@ document.addEventListener("DOMContentLoaded", async () => {
             .filter(cs => new Date(cs.next_step_due_date) <= today && cs.status === "Active")
             .sort((a, b) => new Date(a.next_step_due_date) - new Date(b.next_step_due_date))
             .forEach(cs => {
-                // (Code to render sequence steps...)
+                const contact = state.contacts.find(c => c.id === cs.contact_id);
+                const sequence = state.sequences.find(s => s.id === cs.sequence_id);
+                if (!contact || !sequence) return;
+                const step = state.sequence_steps.find(s => s.sequence_id === sequence.id && s.step_number === cs.current_step_number);
+                if (!step) return;
+                const row = dashboardTable.insertRow();
+                const desc = step.subject || step.message || "";
+                let btnHtml = "";
+                const type = step.type.toLowerCase();
+                if (type === "email" && contact.email) {
+                    btnHtml = `<button class="btn-primary send-email-btn" data-cs-id="${cs.id}">Send Email</button>`;
+                } else {
+                    btnHtml = `<button class="btn-primary complete-step-btn" data-id="${cs.id}">Complete</button>`;
+                }
+                row.innerHTML = `<td>${formatDate(cs.next_step_due_date)}</td><td>${contact.first_name} ${contact.last_name}</td><td>${sequence.name}</td><td>${step.step_number}: ${step.type}</td><td>${desc}</td><td>${btnHtml}</td>`;
             });
-        // (The rest of the rendering logic for other tables remains the same)
+
+        // Render "Upcoming Sequence Tasks"
+        state.contact_sequences
+            .filter(cs => cs.status === "Active")
+            .sort((a, b) => new Date(a.next_step_due_date) - new Date(b.next_step_due_date))
+            .forEach(cs => {
+                const contact = state.contacts.find(c => c.id === cs.contact_id);
+                if (!contact) return;
+                const account = contact.account_id ? state.accounts.find(a => a.id === contact.account_id) : null;
+                const row = allTasksTable.insertRow();
+                row.innerHTML = `<td>${formatDate(cs.next_step_due_date)}</td><td>${contact.first_name} ${contact.last_name}</td><td>${account ? account.name : "N/A"}</td><td><button class="btn-secondary revisit-step-btn" data-cs-id="${cs.id}">Revisit Last Step</button></td>`;
+            });
+
+        // Render "Recent Activities"
+        state.activities
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .slice(0, 20)
+            .forEach(act => {
+                const contact = state.contacts.find(c => c.id === act.contact_id);
+                const account = contact ? state.accounts.find(a => a.id === contact.account_id) : null;
+                const row = recentActivitiesTable.insertRow();
+                row.innerHTML = `<td>${formatDate(act.date)}</td><td>${account ? account.name : "N/A"}</td><td>${contact ? `${contact.first_name} ${contact.last_name}` : "N/A"}</td><td>${act.type}: ${act.description}</td>`;
+            });
     }
 
-    // --- Event Listener Setup ---
+    // --- EVENT LISTENER SETUP ---
     function setupPageEventListeners() {
         setupModalListeners();
         themeToggleBtn.addEventListener("click", cycleTheme);
@@ -145,28 +169,24 @@ document.addEventListener("DOMContentLoaded", async () => {
             await supabase.auth.signOut();
             window.location.href = "index.html";
         });
-        // (Add other dashboard-specific listeners here, e.g., for task buttons)
+        // (Add other specific listeners for this page here)
     }
 
-    // --- INITIALIZATION LOGIC ---
+    // --- INITIALIZATION ---
     function initializePage() {
-        // 1. Apply theme first to prevent flash of wrong theme
         const savedTheme = localStorage.getItem('crm-theme') || 'dark';
         const savedThemeIndex = themes.indexOf(savedTheme);
         currentThemeIndex = savedThemeIndex !== -1 ? savedThemeIndex : 0;
         applyTheme(themes[currentThemeIndex]);
         
-        // 2. Set the active navigation link
         updateActiveNavLink();
 
-        // 3. Check session and load data
         supabase.auth.getSession().then(async ({ data: { session } }) => {
             if (session) {
                 state.currentUser = session.user;
                 setupPageEventListeners();
                 await loadAllData();
             } else {
-                alert("No active session found. Redirecting to login.");
                 window.location.href = "index.html";
             }
         });
