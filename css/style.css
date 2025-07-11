@@ -167,7 +167,6 @@ body.theme-green::before {
 }
 
 /* --- FIX FOR DARK THEME LOGO --- */
-/* Force the specific dark parts of the logo to be white in dark theme */
 body.theme-dark .nav-logo path[fill="#010101"],
 body.theme-dark .auth-logo path[fill="#010101"] {
   fill: #FFFFFF !important;
@@ -226,23 +225,28 @@ body:not(.theme-green) .nav-button {
   transform: translateX(3px);
 }
 
-.nav-button.active {
-  background-color: var(--primary-blue);
-  color: var(--text-light);
-  font-weight: bold;
-  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+/* General Active Button Styling (for nav buttons and new toggle buttons) */
+.nav-button.active,
+.btn-secondary.active { /* TARGETS ACTIVE SECONDARY BUTTONS LIKE THE TOGGLE */
+  background-color: var(--primary-blue); /* Distinct background color */
+  color: var(--text-light); /* Light text for contrast */
+  font-weight: bold; /* Make text bold */
+  border: 1px solid var(--primary-blue); /* Add a border */
+  box-shadow: 0 0 10px rgba(74, 144, 226, 0.6); /* Clearer shadow/glow */
+  transform: translateY(-1px); /* Slight lift for active state */
 }
 
 body.theme-dark .nav-button.active {
   background: linear-gradient(45deg, #3a7bd5, #00d2ff);
 }
 
-/* FIX: Active nav button for Green Theme */
-body.theme-green .nav-button.active {
-  background-color: transparent;
-  color: var(--text-light);
-  border: 1px solid var(--primary-blue);
-  box-shadow: none;
+/* FIX: Active nav button & active secondary button for Green Theme */
+body.theme-green .nav-button.active,
+body.theme-green .btn-secondary.active {
+  background-color: transparent; /* Keep transparent as per green theme style */
+  border: 1px solid var(--text-light); /* Bright green border */
+  color: var(--text-light); /* Bright green text */
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.6); /* Green glowing shadow */
 }
 
 
@@ -751,7 +755,7 @@ body:not(.theme-green) #contact-activities-list li {
   border-radius: 4px;
 }
 
-.sequence-status-icon { /* This was for the old 🔄 icon, can be adjusted or kept for general styling */
+.sequence-status-icon {
   color: var(--completed-color) !important;
   font-size: 12px;
   margin-left: 8px;
