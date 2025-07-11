@@ -3,6 +3,7 @@ import {
     SUPABASE_URL, 
     SUPABASE_ANON_KEY, 
     formatDate,
+    formatSimpleDate,
     addDays,
     themes, 
     setupModalListeners, 
@@ -113,12 +114,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         allTasksTable.innerHTML = "";
         recentActivitiesTable.innerHTML = "";
         
-        // Use UTC date strings for reliable comparison
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
         const todayUTCString = new Date().toISOString().slice(0, 10);
 
         // Render My Tasks
         state.tasks.filter(task => task.status === 'Pending').sort((a, b) => new Date(a.due_date) - new Date(b.due_date)).forEach(task => {
             const row = myTasksTable.insertRow();
+            const dueDate = new Date(task.due_date);
+            if (dueDate < today) {
+                row.classList.add('past-due');
+            }
             let linkedEntity = 'N/A';
             if (task.contact_id) {
                 const contact = state.contacts.find(c => c.id === task.contact_id);
@@ -127,7 +133,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const account = state.accounts.find(a => a.id === task.account_id);
                 if(account) linkedEntity = `<a href="accounts.html?accountId=${account.id}" class="contact-name-link">${account.name}</a> (Account)`;
             }
-            row.innerHTML = `<td>${formatDate(task.due_date)}</td><td>${task.description}</td><td>${linkedEntity}</td>
+            row.innerHTML = `<td>${formatSimpleDate(task.due_date)}</td><td>${task.description}</td><td>${linkedEntity}</td>
                 <td>
                     <button class="btn-primary mark-task-complete-btn" data-task-id="${task.id}">Complete</button>
                     <button class="btn-secondary edit-task-btn" data-task-id="${task.id}">Edit</button>
@@ -135,27 +141,30 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </td>`;
         });
 
-        // Render Sequence Steps Due (with corrected filter)
+        // Render Sequence Steps Due
         state.contact_sequences
             .filter(cs => {
-                // Compare just the YYYY-MM-DD part of the dates
                 const dueDateString = cs.next_step_due_date.slice(0, 10);
                 return dueDateString <= todayUTCString && cs.status === "Active";
             })
             .sort((a, b) => new Date(a.next_step_due_date) - new Date(b.next_step_due_date))
             .forEach(cs => {
+                const row = dashboardTable.insertRow();
+                const dueDate = new Date(cs.next_step_due_date);
+                if (dueDate < today) {
+                    row.classList.add('past-due');
+                }
                 const contact = state.contacts.find(c => c.id === cs.contact_id);
                 const sequence = state.sequences.find(s => s.id === cs.sequence_id);
                 if (!contact || !sequence) return;
                 const step = state.sequence_steps.find(s => s.sequence_id === sequence.id && s.step_number === cs.current_step_number);
                 if (!step) return;
-                const row = dashboardTable.insertRow();
                 const desc = step.subject || step.message || "";
                 let btnHtml = `<button class="btn-primary complete-step-btn" data-id="${cs.id}">Complete</button>`;
                 if (step.type.toLowerCase() === "email" && contact.email) {
                     btnHtml = `<button class="btn-primary send-email-btn" data-cs-id="${cs.id}" data-contact-id="${contact.id}" data-subject="${encodeURIComponent(step.subject)}" data-message="${encodeURIComponent(step.message)}">Send Email</button>`;
                 }
-                row.innerHTML = `<td>${formatDate(cs.next_step_due_date)}</td><td>${contact.first_name} ${contact.last_name}</td><td>${sequence.name}</td><td>${step.step_number}: ${step.type}</td><td>${desc}</td><td>${btnHtml}</td>`;
+                row.innerHTML = `<td>${formatSimpleDate(cs.next_step_due_date)}</td><td>${contact.first_name} ${contact.last_name}</td><td>${sequence.name}</td><td>${step.step_number}: ${step.type}</td><td>${desc}</td><td>${btnHtml}</td>`;
             });
 
         // Render Upcoming Sequence Tasks
@@ -166,11 +175,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             })
             .sort((a, b) => new Date(a.next_step_due_date) - new Date(b.next_step_due_date))
             .forEach(cs => {
+                const row = allTasksTable.insertRow();
                 const contact = state.contacts.find(c => c.id === cs.contact_id);
                 if (!contact) return;
                 const account = contact.account_id ? state.accounts.find(a => a.id === contact.account_id) : null;
-                const row = allTasksTable.insertRow();
-                row.innerHTML = `<td>${formatDate(cs.next_step_due_date)}</td><td>${contact.first_name} ${contact.last_name}</td><td>${account ? account.name : "N/A"}</td><td><button class="btn-secondary revisit-step-btn" data-cs-id="${cs.id}">Revisit Last Step</button></td>`;
+                row.innerHTML = `<td>${formatSimpleDate(cs.next_step_due_date)}</td><td>${contact.first_name} ${contact.last_name}</td><td>${account ? account.name : "N/A"}</td><td><button class="btn-secondary revisit-step-btn" data-cs-id="${cs.id}">Revisit Last Step</button></td>`;
             });
 
         // Render Recent Activities
