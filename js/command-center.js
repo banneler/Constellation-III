@@ -114,17 +114,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         allTasksTable.innerHTML = "";
         recentActivitiesTable.innerHTML = "";
         
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
         const todayUTCString = new Date().toISOString().slice(0, 10);
 
         // Render My Tasks
         state.tasks.filter(task => task.status === 'Pending').sort((a, b) => new Date(a.due_date) - new Date(b.due_date)).forEach(task => {
             const row = myTasksTable.insertRow();
-            const dueDate = new Date(task.due_date);
-            if (dueDate < today) {
-                row.classList.add('past-due');
+            
+            if (task.due_date) {
+                const dueDateString = task.due_date.slice(0, 10);
+                if (dueDateString < todayUTCString) {
+                    row.classList.add('past-due');
+                }
             }
+
             let linkedEntity = 'N/A';
             if (task.contact_id) {
                 const contact = state.contacts.find(c => c.id === task.contact_id);
@@ -150,10 +152,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             .sort((a, b) => new Date(a.next_step_due_date) - new Date(b.next_step_due_date))
             .forEach(cs => {
                 const row = dashboardTable.insertRow();
-                const dueDate = new Date(cs.next_step_due_date);
-                if (dueDate < today) {
+                
+                const dueDateString = cs.next_step_due_date.slice(0, 10);
+                if (dueDateString < todayUTCString) {
                     row.classList.add('past-due');
                 }
+
                 const contact = state.contacts.find(c => c.id === cs.contact_id);
                 const sequence = state.sequences.find(s => s.id === cs.sequence_id);
                 if (!contact || !sequence) return;
