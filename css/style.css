@@ -756,7 +756,20 @@ body.theme-light .sequence-status-icon-svg-inner {
 body.theme-green .sequence-status-icon-svg-inner {
     color: var(--text-light);
 }
+/* --- NEW: DEALS CHART STYLES --- */
+.chart-container {
+    height: 250px; /* Or any height you prefer */
+    padding: 20px;
+    margin-bottom: 30px;
+    background-color: var(--bg-medium);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 6px 15px var(--shadow-medium);
+    transition: background-color 0.3s, border-color 0.3s;
+}
 
+body:not(.theme-green) .chart-container {
+  border-radius: 10px;
+}
 /* --- DEALS METRICS --- */
 .deals-metrics-container {
   display: flex;
