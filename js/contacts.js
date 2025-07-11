@@ -1,4 +1,4 @@
-// js/contacts.js (full updated code)
+// js/contacts.js
 import { SUPABASE_URL, SUPABASE_ANON_KEY, formatDate, parseCsvRow, themes, setupModalListeners, showModal, hideModal } from './shared_constants.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -13,11 +13,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     activities: [],
     contact_sequences: [],
     selectedContactId: null,
+    deals: [], // Needed for linking tasks
+    tasks: [] // Needed to create them (though not displayed on this page)
   };
 
   // --- DOM Element Selectors (Contacts specific) ---
   const logoutBtn = document.getElementById("logout-btn");
-  // const debugBtn = document.getElementById("debug-btn"); // REMOVE THIS LINE
   const contactList = document.getElementById("contact-list");
   const contactForm = document.getElementById("contact-form");
   const contactSearch = document.getElementById("contact-search");
@@ -27,6 +28,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const deleteContactBtn = document.getElementById("delete-contact-btn");
   const logActivityBtn = document.getElementById("log-activity-btn");
   const assignSequenceBtn = document.getElementById("assign-sequence-btn");
+  const addTaskContactBtn = document.getElementById("add-task-contact-btn"); // NEW: Add Task button
   const contactActivitiesList = document.getElementById("contact-activities-list");
   const contactSequenceInfoText = document.getElementById("contact-sequence-info-text");
   const removeFromSequenceBtn = document.getElementById("remove-from-sequence-btn");
@@ -57,8 +59,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function loadAllData() {
     if (!state.currentUser) return;
 
-    const userSpecificTables = ["contacts", "accounts", "activities", "contact_sequences", "sequences"]; // Added sequences for contact_sequences
-    const publicTables = ["sequence_steps"]; // Needed for sequence details on contact
+    // UPDATED: Include 'deals' and 'tasks' in data fetch for dropdowns
+    const userSpecificTables = ["contacts", "accounts", "activities", "contact_sequences", "sequences", "deals", "tasks"];
+    const publicTables = ["sequence_steps"];
 
     const userPromises = userSpecificTables.map((table) =>
       supabase.from(table).select("*").eq("user_id", state.currentUser.id)
@@ -173,14 +176,14 @@ document.addEventListener("DOMContentLoaded", async () => {
           li.textContent = `[${formatDate(act.date)}] ${act.type}: ${
             act.description
           }`;
-          let borderColor = "var(--primary-blue)"; // Default color
+          let borderColor = "var(--primary-blue)";
           const activityTypeLower = act.type.toLowerCase();
           if (activityTypeLower.includes("email")) {
             borderColor = "var(--warning-yellow)";
           } else if (activityTypeLower.includes("call")) {
             borderColor = "var(--completed-color)";
-          } else if (activityTypeLower.includes("meeting")) { // NEW CONDITION ADDED HERE
-            borderColor = "var(--meeting-purple)";          // Uses the new CSS variable
+          } else if (activityTypeLower.includes("meeting")) {
+            borderColor = "var(--meeting-purple)";
           }
           li.style.borderLeftColor = borderColor;
           contactActivitiesList.appendChild(li);
@@ -210,6 +213,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       } else {
         sequenceStatusContent.classList.add("hidden");
+        noSequenceText.textContent = "Not in a sequence.";
         noSequenceText.classList.remove("hidden");
       }
     } else {
@@ -232,11 +236,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     await supabase.auth.signOut();
     window.location.href = "index.html"; // Redirect to auth page after logout
   });
-
-  // debugBtn.addEventListener("click", () => { // REMOVE THIS LISTENER
-  //   console.log(JSON.stringify(state, null, 2));
-  //   alert("Current app state logged to console (F12).");
-  // });
 
   contactSearch.addEventListener("input", renderContactList);
 
@@ -432,6 +431,85 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     );
   });
+
+  // NEW: Add Task button listener for Contact page
+  if (addTaskContactBtn) { // Ensure button exists before adding listener
+    addTaskContactBtn.addEventListener("click", async () => {
+        if (!state.selectedContactId) {
+            alert("Please select a contact to link the task.");
+            return;
+        }
+        const currentContact = state.contacts.find(c => c.id === state.selectedContactId);
+        if (!currentContact) {
+            alert("Selected contact not found.");
+            return;
+        }
+
+        // Prepare options for linked entities, pre-selecting the current contact
+        const contactsOptions = state.contacts.map(c => `<option value="c-${c.id}" ${c.id === currentContact.id ? 'selected' : ''}>${c.first_name} ${c.last_name}</option>`).join('');
+        // Sort accounts and deals for better readability in dropdowns
+        const accountsOptions = state.accounts
+            .sort((a,b) => (a.name || '').localeCompare(b.name || ''))
+            .map(a => `<option value="a-${a.id}">${a.name}</option>`).join('');
+        const dealsOptions = state.deals
+            .sort((a,b) => (a.name || '').localeCompare(b.name || ''))
+            .map(d => `<option value="d-${d.id}">${d.name}</option>`).join('');
+
+        showModal(
+            `Create Task for ${currentContact.first_name} ${currentContact.last_name}`,
+            `
+            <label>Description:</label><input type="text" id="modal-task-description" required><br>
+            <label>Due Date:</label><input type="date" id="modal-task-due-date"><br>
+            <label>Link To:</label>
+            <select id="modal-task-linked-entity" disabled> <optgroup label="Contacts">${contactsOptions}</optgroup>
+                <optgroup label="Accounts">${accountsOptions}</optgroup>
+                <optgroup label="Deals">${dealsOptions}</optgroup>
+            </select>
+            `,
+            async () => {
+                const description = document.getElementById('modal-task-description').value.trim();
+                const dueDate = document.getElementById('modal-task-due-date').value;
+                const linkedEntityValue = document.getElementById('modal-task-linked-entity').value; // Will be pre-selected value
+
+                if (!description) {
+                    alert('Task description is required.');
+                    return;
+                }
+
+                const newTask = {
+                    user_id: state.currentUser.id,
+                    description: description,
+                    due_date: dueDate || null,
+                    status: 'Pending'
+                };
+
+                // Determine linked entity type and set the correct ID based on pre-selection
+                if (linkedEntityValue.startsWith('c-')) {
+                    newTask.contact_id = Number(linkedEntityValue.substring(2));
+                } else if (linkedEntityValue.startsWith('a-')) {
+                    newTask.account_id = Number(linkedEntityValue.substring(2));
+                } else if (linkedEntityValue.startsWith('d-')) {
+                    newTask.deal_id = Number(linkedEntityValue.substring(2));
+                }
+
+                console.log('Creating new task from Contact page:', newTask);
+                const { error } = await supabase.from('tasks').insert([newTask]);
+
+                if (error) {
+                    console.error('Error creating task from Contact page:', error.message);
+                    alert('Error: ' + error.message);
+                } else {
+                    console.log('Task created from Contact page. Reloading data (though not reflected here).');
+                    // No need to loadAllData on contact page as tasks are not displayed here,
+                    // but we do want the dashboard to reflect it if user navigates there.
+                    alert('Task created successfully! See it on your Dashboard.');
+                    hideModal();
+                }
+            }
+        );
+    });
+  }
+
 
   // --- App Initialization (Contacts Page) ---
   const savedTheme = localStorage.getItem('crm-theme') || 'dark';
