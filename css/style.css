@@ -211,33 +211,35 @@ body:not(.theme-green) .nav-button {
 }
 
 /* --- UPDATED ACTIVE BUTTON STYLES --- */
-.nav-button.active {
+.nav-button.active,
+.btn-secondary.active { /* This now correctly styles BOTH nav links and toggle buttons */
   color: var(--text-light);
   font-weight: bold;
   transform: translateY(-1px);
-  background: linear-gradient(45deg, #3a7bd5, #00d2ff); /* Default active background */
+  background: linear-gradient(45deg, #3a7bd5, #00d2ff);
   box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+  border: none;
 }
 
 /* Theme-specific overrides for the active button */
-body.theme-light .nav-button.active {
+body.theme-light .nav-button.active,
+body.theme-light .btn-secondary.active {
   background: linear-gradient(45deg, #007bff, #00c6ff);
 }
 
-body.theme-green .nav-button.active {
+body.theme-green .nav-button.active,
+body.theme-green .btn-secondary.active {
   background: transparent;
   border: 1px solid var(--text-light);
   box-shadow: 0 0 10px rgba(0, 255, 65, 0.6);
 }
 /* --- END OF UPDATED STYLES --- */
 
-
 .content-area {
   flex-grow: 1;
   padding: 20px;
   overflow-y: auto;
 }
-
 
 /* --- DOWNLOADS SECTION --- */
 .downloads-section {
