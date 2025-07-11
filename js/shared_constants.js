@@ -3,10 +3,20 @@ export const SUPABASE_URL = "https://pjxcciepfypzrfmlfchj.supabase.co";
 export const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqeGNjaWVwZnlwenJmbWxmY2hqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMTU4NDQsImV4cCI6MjA2NzY5MTg0NH0.m_jyE0e4QFevI-mGJHYlGmA12lXf8XoMDoiljUav79c";
 
-export const MONTHLY_QUOTA = 5000; // This constant is effectively overridden by user_quotas now, but kept for compatibility.
+export const MONTHLY_QUOTA = 5000;
 export const themes = ['dark', 'light', 'green'];
 
 export const formatDate = (ds) => (ds ? new Date(ds).toLocaleString() : "");
+
+// NEW: Date formatter for date only
+export const formatSimpleDate = (ds) => {
+    if (!ds) return "";
+    const date = new Date(ds);
+    // Adjust for timezone to show the correct calendar date
+    const adjustedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+    return adjustedDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+};
+
 export const formatMonthYear = (ds) => {
   if (!ds) return "";
   const date = new Date(ds);
@@ -23,10 +33,9 @@ export const formatCurrencyK = (value) => {
   const valInK = value / 1000;
   return `$${valInK.toFixed(1)}K`;
 };
-// NEW: Function to format currency as full value (e.g., $10,000)
 export const formatCurrency = (value) => {
     if (value === null || isNaN(value)) return "$0";
-    return `$${value.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`; // Formats with commas, no decimals
+    return `$${value.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 };
 
 export const addDays = (d, days) => {
@@ -53,13 +62,12 @@ export const parseCsvRow = (row) => {
   return r;
 };
 
-// Modal functions (can also be moved here)
+// Modal functions
 let onConfirmCallback = null;
 export const showModal = (title, bodyHtml, onConfirm) => {
   const modalTitle = document.getElementById("modal-title");
   const modalBody = document.getElementById("modal-body");
   const modalBackdrop = document.getElementById("modal-backdrop");
-
   if (!modalTitle || !modalBody || !modalBackdrop) {
       console.error("Modal elements not found!");
       return;
@@ -87,18 +95,14 @@ export const setupModalListeners = () => {
         modalCancelBtn.addEventListener("click", hideModal);
     }
 };
-// Add this new function to the end of shared_constants.js
 
 export function updateActiveNavLink() {
-  const currentPath = window.location.pathname.split('/').pop(); // Gets "command-center.html", etc.
+  const currentPath = window.location.pathname.split('/').pop();
   if (!currentPath) return;
-
   const navLinks = document.querySelectorAll('.nav-sidebar .nav-button');
-
   navLinks.forEach(link => {
     link.classList.remove('active');
     const linkPath = link.getAttribute('href');
-
     if (linkPath && linkPath.includes(currentPath)) {
       link.classList.add('active');
     }
