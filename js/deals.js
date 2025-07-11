@@ -24,11 +24,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         dealsViewMode: 'mine',
         currentUserQuota: 0,
         allUsersQuotas: [],
-        dealsChart: null
+        dealsByStageChart: null,
+        dealsByTimeChart: null
     };
 
-    const chartCanvas = document.getElementById('deals-by-stage-chart');
-    const chartEmptyMessage = document.getElementById('chart-empty-message');
+    // --- DOM Element Selectors ---
+    const dealsByStageCanvas = document.getElementById('deals-by-stage-chart');
+    const stageChartEmptyMessage = document.getElementById('chart-empty-message');
+    const dealsByTimeCanvas = document.getElementById('deals-by-time-chart');
+    const timeChartEmptyMessage = document.getElementById('time-chart-empty-message');
     const logoutBtn = document.getElementById("logout-btn");
     const dealsTable = document.getElementById("deals-table");
     const dealsTableBody = document.querySelector("#deals-table tbody");
@@ -45,6 +49,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const commitTotalQuota = document.getElementById("commit-total-quota");
     const bestCaseTotalQuota = document.getElementById("best-case-total-quota");
 
+    // --- Theme Toggle Logic ---
     let currentThemeIndex = 0;
     function applyTheme(themeName) {
         if (!themeNameSpan) return;
@@ -60,24 +65,31 @@ document.addEventListener("DOMContentLoaded", async () => {
         applyTheme(newTheme);
     }
 
+    // --- Data Fetching ---
     async function loadAllData() {
         if (!state.currentUser) return;
+
         const dealsQuery = supabase.from("deals").select("*");
         if (state.dealsViewMode === 'mine') {
             dealsQuery.eq("user_id", state.currentUser.id);
         }
+
         const accountsQuery = supabase.from("accounts").select("*").eq("user_id", state.currentUser.id);
         const currentUserQuotaQuery = supabase.from("user_quotas").select("monthly_quota").eq("user_id", state.currentUser.id);
+
         let allQuotasQuery;
         if (state.dealsViewMode === 'all' && state.currentUser.user_metadata?.is_manager === true) {
             allQuotasQuery = supabase.from("user_quotas").select("monthly_quota");
         }
+        
         const promises = [dealsQuery, accountsQuery, currentUserQuotaQuery];
         const allTableNames = ["deals", "accounts", "currentUserQuota"];
+
         if (allQuotasQuery) {
             promises.push(allQuotasQuery);
             allTableNames.push("allUsersQuotas");
         }
+
         try {
             const results = await Promise.allSettled(promises);
             results.forEach((result, index) => {
@@ -90,8 +102,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                     }
                 } else {
                     console.error(`Error fetching ${tableName}:`, result.status === 'fulfilled' ? result.value.error?.message : result.reason);
-                    if(tableName === 'currentUserQuota') state.currentUserQuota = 0;
-                    else state[tableName] = [];
                 }
             });
         } catch (error) {
@@ -99,30 +109,28 @@ document.addEventListener("DOMContentLoaded", async () => {
         } finally {
             renderDealsPage();
             renderDealsMetrics();
-            renderDealsChart();
+            renderDealsByStageChart();
+            renderDealsByTimeChart();
         }
     }
 
-    function renderDealsChart() {
-        if (!chartCanvas) {
-            console.error("Chart canvas element not found!");
+    // --- RENDER FUNCTIONS ---
+    function renderDealsByStageChart() {
+        if (!dealsByStageCanvas || !stageChartEmptyMessage) return;
+
+        const openDeals = state.deals.filter(
+            deal => deal.stage !== 'Closed Won' && deal.stage !== 'Closed Lost'
+        );
+
+        if (openDeals.length === 0) {
+            dealsByStageCanvas.classList.add('hidden');
+            stageChartEmptyMessage.classList.remove('hidden');
             return;
         }
+        dealsByStageCanvas.classList.remove('hidden');
+        stageChartEmptyMessage.classList.add('hidden');
 
-        // Exit if there's no data. We won't show the empty message for this test.
-        if (!state.deals || state.deals.length === 0) {
-            console.log("No deals in state, chart will not be rendered.");
-            chartCanvas.classList.add('hidden');
-            if(chartEmptyMessage) chartEmptyMessage.classList.remove('hidden');
-            return;
-        }
-        
-        chartCanvas.classList.remove('hidden');
-        if(chartEmptyMessage) chartEmptyMessage.classList.add('hidden');
-
-
-        // Process the data
-        const stageCounts = state.deals.reduce((acc, deal) => {
+        const stageCounts = openDeals.reduce((acc, deal) => {
             const stage = deal.stage || 'Uncategorized';
             acc[stage] = (acc[stage] || 0) + 1;
             return acc;
@@ -130,45 +138,118 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const labels = Object.keys(stageCounts);
         const data = Object.values(stageCounts);
-        const chartColors = ['#4a90e2', '#50e3c2', '#f5a623', '#f8e71c', '#bd10e0', '#9013fe', '#4a4a4a'];
+        const chartColors = ['#4a90e2', '#50e3c2', '#f5a623', '#bd10e0', '#9013fe', '#4a4a4a'];
 
-        // Destroy the old chart instance if it exists
-        if (state.dealsChart) {
-            state.dealsChart.destroy();
+        if (state.dealsByStageChart) {
+            state.dealsByStageChart.destroy();
         }
 
-        // Create the new chart
-        try {
-            state.dealsChart = new Chart(chartCanvas, {
-                type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Deals by Stage',
-                        data: data,
-                        backgroundColor: chartColors,
-                        borderColor: 'var(--bg-medium)',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                color: 'var(--text-medium)'
-                            }
+        state.dealsByStageChart = new Chart(dealsByStageCanvas, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Deals by Stage',
+                    data: data,
+                    backgroundColor: chartColors,
+                    borderColor: 'var(--bg-medium)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            color: 'var(--text-medium)'
                         }
                     }
                 }
-            });
-        } catch (e) {
-            console.error("Error during chart creation:", e);
-        }
+            }
+        });
     }
-    
+
+    function renderDealsByTimeChart() {
+        if (!dealsByTimeCanvas || !timeChartEmptyMessage) return;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const funnel = {
+            '0-30 Days': 0,
+            '31-60 Days': 0,
+            '61-90 Days': 0,
+            '90+ Days': 0
+        };
+
+        const openDeals = state.deals.filter(
+            deal => deal.stage !== 'Closed Won' && deal.stage !== 'Closed Lost' && deal.close_month
+        );
+
+        if (openDeals.length === 0) {
+            dealsByTimeCanvas.classList.add('hidden');
+            timeChartEmptyMessage.classList.remove('hidden');
+            return;
+        }
+        dealsByTimeCanvas.classList.remove('hidden');
+        timeChartEmptyMessage.classList.add('hidden');
+        
+        openDeals.forEach(deal => {
+            const closeDate = new Date(deal.close_month);
+            const diffTime = closeDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays >= 0 && diffDays <= 30) {
+                funnel['0-30 Days'] += deal.mrc || 0;
+            } else if (diffDays >= 31 && diffDays <= 60) {
+                funnel['31-60 Days'] += deal.mrc || 0;
+            } else if (diffDays >= 61 && diffDays <= 90) {
+                funnel['61-90 Days'] += deal.mrc || 0;
+            } else if (diffDays > 90) {
+                funnel['90+ Days'] += deal.mrc || 0;
+            }
+        });
+
+        const labels = Object.keys(funnel);
+        const data = Object.values(funnel).map(val => val / 1000); // Display in thousands
+
+        if (state.dealsByTimeChart) {
+            state.dealsByTimeChart.destroy();
+        }
+
+        state.dealsByTimeChart = new Chart(dealsByTimeCanvas, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Funnel Value (in $K)',
+                    data: data,
+                    backgroundColor: ['#50e3c2', '#4a90e2', '#f5a623', '#6d6d6d'],
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                },
+                scales: {
+                    x: {
+                        ticks: { color: 'var(--text-medium)' },
+                        grid: { color: 'var(--border-color)' }
+                    },
+                    y: {
+                        ticks: { color: 'var(--text-medium)' },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
     const renderDealsPage = () => {
         if (!dealsTableBody) return;
         const dealsWithAccount = state.deals.map((deal) => {
