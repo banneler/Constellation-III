@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     accounts: [], // Needed to display account names in deals table
     dealsSortBy: "name",
     dealsSortDir: "asc",
-    dealsViewMode: 'mine' // NEW: 'mine' or 'all'
+    dealsViewMode: 'mine' // 'mine' or 'all'
   };
 
   // --- DOM Element Selectors (Deals specific) ---
@@ -22,8 +22,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const metricCurrentCommit = document.getElementById("metric-current-commit");
   const metricBestCase = document.getElementById("metric-best-case");
   const metricFunnel = document.getElementById("metric-funnel");
-  const viewMyDealsBtn = document.getElementById("view-my-deals-btn");   // NEW: My Deals button
-  const viewAllDealsBtn = document.getElementById("view-all-deals-btn"); // NEW: All Users' Deals button
+  const viewMyDealsBtn = document.getElementById("view-my-deals-btn");
+  const viewAllDealsBtn = document.getElementById("view-all-deals-btn");
 
   // --- Theme Toggle Logic ---
   let currentThemeIndex = 0;
@@ -45,12 +45,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function loadAllData() {
     if (!state.currentUser) return;
 
-    // UPDATED: Modify deals fetch based on dealsViewMode
     const dealsQuery = supabase.from("deals").select("*");
     if (state.dealsViewMode === 'mine') {
         dealsQuery.eq("user_id", state.currentUser.id);
     }
-    // IMPORTANT RLS NOTE: If RLS on 'deals' table only allows 'auth.uid() = user_id',
+    // RLS NOTE: If RLS on 'deals' table only allows 'auth.uid() = user_id',
     // fetching 'all' will still only return the current user's deals unless RLS is updated.
 
     const userSpecificTables = ["accounts"]; // Accounts are still always user-specific
@@ -130,6 +129,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         deal.id
       }">Edit</button></td>`;
     });
+    // Ensure active class for sorting arrows is applied on render
     document.querySelectorAll("#deals-table th.sortable").forEach((th) => {
       th.classList.remove("asc", "desc");
       if (th.dataset.sort === state.dealsSortBy) {
@@ -145,8 +145,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     let currentCommit = 0;
     let bestCase = 0;
     let totalFunnel = 0;
-    // UPDATED: Metrics calculations now apply to currently displayed deals (state.deals)
-    // regardless of whether it's 'mine' or 'all'
     state.deals.forEach((deal) => {
       const dealCloseDate = deal.close_month ?
         new Date(deal.close_month) :
@@ -275,7 +273,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   // NEW: Deals View Toggle Event Listeners
   if (viewMyDealsBtn) {
     viewMyDealsBtn.addEventListener('click', async () => {
+      console.log("View My Deals button clicked."); // ADDED LOG
       state.dealsViewMode = 'mine';
+      console.log("dealsViewMode set to:", state.dealsViewMode); // ADDED LOG
       viewMyDealsBtn.classList.add('active');
       viewAllDealsBtn.classList.remove('active');
       await loadAllData();
@@ -284,7 +284,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (viewAllDealsBtn) {
     viewAllDealsBtn.addEventListener('click', async () => {
+      console.log("View All Deals button clicked."); // ADDED LOG
       state.dealsViewMode = 'all';
+      console.log("dealsViewMode set to:", state.dealsViewMode); // ADDED LOG
       viewAllDealsBtn.classList.add('active');
       viewMyDealsBtn.classList.remove('active');
       await loadAllData();
