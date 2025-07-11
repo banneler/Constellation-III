@@ -58,11 +58,32 @@
         <main class="content-area">
             <div id="deals" class="content-view active-view">
                 <h2>Deals</h2>
-                 <div class="chart-container">
-        <canvas id="deals-by-stage-chart"></canvas>
-        <div id="chart-empty-message" class="chart-empty-message hidden">
-            No deal data available to display. Add a deal to see the chart.
-        </div>
+                         <div class="charts-grid">
+                    <div class="chart-container">
+                        <h4>Deals by Stage</h4>
+                        <canvas id="deals-by-stage-chart"></canvas>
+                        <div id="chart-empty-message" class="chart-empty-message hidden">
+                            No open deal data available to display.
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h4>30/60/90 Day Funnel</h4>
+                        <canvas id="deals-by-time-chart"></canvas>
+                        <div id="time-chart-empty-message" class="chart-empty-message hidden">
+                            No deals with future close dates.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="deals-view-toggle" style="margin-bottom: 20px;">
+                    </div>
+                <div class="deals-metrics-container">
+                    </div>
+                <div class="table-container">
+                    </div>
+            </div>
+        </main>
+    </div>
     </div>
                 <div class="deals-view-toggle" style="margin-bottom: 20px;">
                     <button id="view-my-deals-btn" class="btn-secondary active">My Deals</button>
