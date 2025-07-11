@@ -102,13 +102,67 @@ document.addEventListener("DOMContentLoaded", async () => {
             renderDealsChart();
         }
     }
+function renderDealsChart() {
+    const chartCanvas = document.getElementById('deals-by-stage-chart');
+    if (!chartCanvas) {
+        console.error("Chart canvas element not found!");
+        return;
+    }
 
-    function renderDealsChart() {
-        if (!chartCanvas || !chartEmptyMessage) return;
-        if (state.deals.length === 0) {
-            chartCanvas.classList.add('hidden');
-            chartEmptyMessage.classList.remove('hidden');
-            return;
+    // Exit if there's no data. We won't show the empty message for this test.
+    if (!state.deals || state.deals.length === 0) {
+        console.log("No deals in state, chart will not be rendered.");
+        return;
+    }
+
+    // Process the data
+    const stageCounts = state.deals.reduce((acc, deal) => {
+        const stage = deal.stage || 'Uncategorized';
+        acc[stage] = (acc[stage] || 0) + 1;
+        return acc;
+    }, {});
+
+    const labels = Object.keys(stageCounts);
+    const data = Object.values(stageCounts);
+    const chartColors = ['#4a90e2', '#50e3c2', '#f5a623', '#f8e71c', '#bd10e0', '#9013fe', '#4a4a4a'];
+
+    // Destroy the old chart instance if it exists
+    if (state.dealsChart) {
+        state.dealsChart.destroy();
+    }
+
+    // Create the new chart
+    try {
+        chartCanvas.classList.remove('hidden'); // Ensure canvas is visible
+        state.dealsChart = new Chart(chartCanvas, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Deals by Stage',
+                    data: data,
+                    backgroundColor: chartColors,
+                    borderColor: 'var(--bg-medium)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            color: 'var(--text-medium)'
+                        }
+                    }
+                }
+            }
+        });
+    } catch (e) {
+        console.error("Error during chart creation:", e);
+    }
+}
         }
         chartCanvas.classList.remove('hidden');
         chartEmptyMessage.classList.add('hidden');
