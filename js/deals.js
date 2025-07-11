@@ -1,5 +1,5 @@
 // js/deals.js
-import { SUPABASE_URL, SUPABASE_ANON_KEY, MONTHLY_QUOTA, formatMonthYear, formatCurrencyK, themes, setupModalListeners, showModal, hideModal } from './shared_constants.js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, formatMonthYear, formatCurrencyK, formatCurrency, themes, setupModalListeners, showModal, hideModal } from './shared_constants.js'; // NEW: Added formatCurrency
 
 document.addEventListener("DOMContentLoaded", async () => {
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -7,12 +7,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   let state = {
     currentUser: null,
     deals: [],
-    accounts: [], // Needed to display account names in deals table
+    accounts: [],
     dealsSortBy: "name",
     dealsSortDir: "asc",
-    dealsViewMode: 'mine', // 'mine' or 'all'
-    currentUserQuota: 0, // Default quota for current user
-    allUsersQuotas: [] // For manager view to sum up all quotas
+    dealsViewMode: 'mine',
+    currentUserQuota: 0,
+    allUsersQuotas: []
   };
 
   // --- DOM Element Selectors (Deals specific) ---
@@ -25,13 +25,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   const metricBestCase = document.getElementById("metric-best-case");
   const metricFunnel = document.getElementById("metric-funnel");
   const viewMyDealsBtn = document.getElementById("view-my-deals-btn");
-  const viewAllDealsBtn = document.getElementById("view-all-deals-btn"); // Changed button text in HTML
+  const viewAllDealsBtn = document.getElementById("view-all-deals-btn");
   const dealsViewToggleDiv = document.querySelector('.deals-view-toggle');
 
-  const metricCurrentCommitTitle = document.getElementById("metric-current-commit-title"); // NEW ID
-  const metricBestCaseTitle = document.getElementById("metric-best-case-title");       // NEW ID
-  const commitTotalQuota = document.getElementById("commit-total-quota");             // NEW ID
-  const bestCaseTotalQuota = document.getElementById("best-case-total-quota");         // NEW ID
+  const metricCurrentCommitTitle = document.getElementById("metric-current-commit-title");
+  const metricBestCaseTitle = document.getElementById("metric-best-case-title");
+  const commitTotalQuota = document.getElementById("commit-total-quota");
+  const bestCaseTotalQuota = document.getElementById("best-case-total-quota");
 
   // --- Theme Toggle Logic ---
   let currentThemeIndex = 0;
@@ -64,11 +64,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                                         .single();
 
     let allQuotasQuery;
-    // Only fetch all quotas if currently in 'all' view AND user is a manager
     if (state.dealsViewMode === 'all' && state.currentUser.user_metadata?.is_manager === true) {
         allQuotasQuery = supabase.from("user_quotas").select("monthly_quota");
     }
-
 
     const userSpecificTables = ["accounts"];
     const promises = [
@@ -104,7 +102,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                  state.allUsersQuotas = [];
             }
           } else {
-            console.log(`loadAllData: Fetched ${tableName} data:`, result.value.data);
+            console.log(`loadAllData: Fetched ${tableName} data:`, result.value.data); // Keep this log
             if (tableName === "currentUserQuota") {
                 state.currentUserQuota = result.value.data.monthly_quota || 0;
             } else if (tableName === "allUsersQuotas") {
@@ -130,7 +128,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // --- Render Functions (Deals specific) ---
   const renderDealsPage = () => {
     if (!dealsTableBody) return;
-    console.log("renderDealsPage: state.deals before rendering:", state.deals);
+    console.log("renderDealsPage: state.deals before rendering:", state.deals); // Keep this log
 
     const dealsWithAccount = state.deals.map((deal) => {
       const account = state.accounts.find((a) => a.id === deal.account_id);
@@ -194,17 +192,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (isMyTeamView) {
         effectiveMonthlyQuota = state.allUsersQuotas.reduce((sum, quota) => sum + (quota.monthly_quota || 0), 0);
         if (effectiveMonthlyQuota === 0 && state.allUsersQuotas.length > 0) {
-            console.warn("renderDealsMetrics: Sum of all quotas is 0, check monthly_quota values in DB.");
+          console.warn("renderDealsMetrics: Sum of all quotas is 0, check monthly_quota values in DB.");
         }
     } else {
         effectiveMonthlyQuota = state.currentUserQuota;
     }
+    // No longer need fallback here, as formatCurrency will handle 0 value correctly
+    console.log("renderDealsMetrics: Using effectiveMonthlyQuota:", effectiveMonthlyQuota);
+
 
     // Display total quota if in 'My Team's Deals' view
     if (commitTotalQuota && bestCaseTotalQuota) {
         if (isMyTeamView) {
-            commitTotalQuota.textContent = `Quota: ${formatCurrencyK(effectiveMonthlyQuota)}`;
-            bestCaseTotalQuota.textContent = `Quota: ${formatCurrencyK(effectiveMonthlyQuota)}`;
+            commitTotalQuota.textContent = formatCurrency(effectiveMonthlyQuota); // Use NEW formatCurrency (no "Quota:" prefix)
+            bestCaseTotalQuota.textContent = formatCurrency(effectiveMonthlyQuota); // Use NEW formatCurrency
             commitTotalQuota.classList.remove('hidden');
             bestCaseTotalQuota.classList.remove('hidden');
         } else {
@@ -215,11 +216,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
 
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
     let currentCommit = 0;
     let bestCase = 0;
     let totalFunnel = 0;
 
-    state.deals.forEach((deal) => {
+    state.deals.forEach((deal) => { // This loop needs state.deals to have data
       const dealCloseDate = deal.close_month ?
         new Date(deal.close_month) :
         null;
@@ -236,7 +239,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     });
 
-    // Use effectiveMonthlyQuota for percentage calculations
+    // NEW LOGS: What are these values?
+    console.log("renderDealsMetrics: Calculated sums - Commit:", currentCommit, "Best Case:", bestCase, "Funnel:", totalFunnel);
+
+    // Ensure these text contents are always set. formatCurrencyK handles null/NaN/0
+    metricCurrentCommit.textContent = formatCurrencyK(currentCommit);
+    metricBestCase.textContent = formatCurrencyK(bestCase);
+    metricFunnel.textContent = formatCurrencyK(totalFunnel); // This should be updated if funnel is calculated
+
     const commitPercentage =
       effectiveMonthlyQuota > 0 ?
       ((currentCommit / effectiveMonthlyQuota) * 100).toFixed(1) :
@@ -244,9 +254,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const bestCasePercentage =
       effectiveMonthlyQuota > 0 ? ((bestCase / effectiveMonthlyQuota) * 100).toFixed(1) : 0;
 
-    metricCurrentCommit.textContent = formatCurrencyK(currentCommit);
-    metricBestCase.textContent = formatCurrencyK(bestCase);
-    metricFunnel.textContent = formatCurrencyK(totalFunnel);
     document.getElementById(
       "commit-quota-percent"
     ).textContent = `${commitPercentage}%`;
@@ -385,16 +392,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         const isManager = state.currentUser.user_metadata?.is_manager === true;
         if (!isManager) {
             dealsViewToggleDiv.classList.add('hidden');
-            state.dealsViewMode = 'mine'; // Force to 'mine' view if not manager
+            state.dealsViewMode = 'mine';
         } else {
             dealsViewToggleDiv.classList.remove('hidden');
-            // Ensure 'My Deals' is active on manager load by default, but allow toggle
             viewMyDealsBtn.classList.add('active');
             viewAllDealsBtn.classList.remove('active');
         }
     }
     await loadAllData();
   } else {
-    window.location.href = "index.html"; // Redirect if not signed in
+    window.location.href = "index.html";
   }
 });
