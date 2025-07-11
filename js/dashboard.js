@@ -1,4 +1,4 @@
-// js/dashboard.js (full updated code)
+// js/dashboard.js
 import { SUPABASE_URL, SUPABASE_ANON_KEY, MONTHLY_QUOTA, formatDate, formatCurrencyK, addDays, themes, setupModalListeners, showModal, hideModal } from './shared_constants.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -13,14 +13,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     activities: [],
     contact_sequences: [],
     deals: [],
+    tasks: [], // NEW: Add tasks array to state
   };
 
   // --- DOM Element Selectors (Dashboard specific) ---
   const logoutBtn = document.getElementById("logout-btn");
-  // const debugBtn = document.getElementById("debug-btn"); // REMOVE THIS LINE
   const dashboardTable = document.querySelector("#dashboard-table tbody");
   const recentActivitiesTable = document.querySelector("#recent-activities-table tbody");
   const allTasksTable = document.querySelector("#all-tasks-table tbody");
+  const myTasksTable = document.querySelector("#my-tasks-table tbody"); // NEW: Selector for tasks table
   const themeToggleBtn = document.getElementById("theme-toggle-btn");
   const themeNameSpan = document.getElementById("theme-name");
   const metricCurrentCommit = document.getElementById("metric-current-commit");
@@ -55,7 +56,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!state.currentUser) return;
     console.log("loadAllData: Fetching all user data...");
 
-    const userSpecificTables = ["contacts", "accounts", "sequences", "activities", "contact_sequences", "deals"];
+    // UPDATED: Add 'tasks' to the list of user-specific tables
+    const userSpecificTables = ["contacts", "accounts", "sequences", "activities", "contact_sequences", "deals", "tasks"];
     const publicTables = ["sequence_steps"];
 
     const userPromises = userSpecificTables.map((table) =>
@@ -96,29 +98,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // --- Render Functions (Defined as function declarations to ensure hoisting) ---
+  // --- Render Functions ---
   function renderDashboard() {
-    if (!dashboardTable || !recentActivitiesTable || !allTasksTable) return;
+    if (!dashboardTable || !recentActivitiesTable || !allTasksTable || !myTasksTable) return; // UPDATED: Added myTasksTable check
     console.log("renderDashboard: Starting render process.");
     dashboardTable.innerHTML = "";
     recentActivitiesTable.innerHTML = "";
     allTasksTable.innerHTML = "";
+    myTasksTable.innerHTML = ""; // NEW: Clear tasks table
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalize 'today' to start of local day
-    console.log("renderDashboard: Current 'today' date for filtering (normalized local):", today.toISOString());
+    today.setHours(0, 0, 0, 0);
 
     const dueSequenceSteps = state.contact_sequences
       .filter(
         (cs) => {
           const nextStepDate = new Date(cs.next_step_due_date);
-          // Normalize nextStepDate to start of its *local* day for comparison
-          nextStepDate.setHours(0, 0, 0, 0);
+          nextStepDate.setHours(0, 0, 0, 0); // Normalize nextStepDate
 
           const isDue = nextStepDate <= today;
           const isActive = cs.status === "Active";
 
-          // Detailed debugging for the specific contact sequence (csId: 5 from your logs)
-          if (cs.id === 5) {
+          if (cs.id === 5) { // Debugging specific csId (from previous logs)
               console.log(`renderDashboard: Checking csId 5 -- Raw DB Date: ${cs.next_step_due_date}, Normalized Date for Comparison: ${nextStepDate.toISOString()}, IsDue: ${isDue}, Status: ${cs.status}, IsActive: ${isActive}`);
           }
           return isDue && isActive;
@@ -164,6 +164,38 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
         row.innerHTML = `<td>${formatDate(cs.next_step_due_date)}</td><td>${contact.first_name} ${contact.last_name}</td><td>${sequence.name}</td><td>${step.step_number}: ${step.type}</td><td>${desc}</td><td>${btnHtml}</td>`;
     });
+
+    // NEW: Render My Tasks
+    state.tasks
+        .filter(task => task.status === 'Pending') // Only show pending tasks
+        .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
+        .forEach(task => {
+            const row = myTasksTable.insertRow();
+            let linkedEntity = 'N/A';
+            if (task.contact_id) {
+                const contact = state.contacts.find(c => c.id === task.contact_id);
+                if (contact) linkedEntity = `<a href="contacts.html?contactId=${contact.id}" class="contact-name-link">${contact.first_name} ${contact.last_name}</a> (Contact)`;
+            } else if (task.account_id) {
+                const account = state.accounts.find(a => a.id === task.account_id);
+                if (account) linkedEntity = `<a href="accounts.html?accountId=${account.id}" class="contact-name-link">${account.name}</a> (Account)`;
+            } else if (task.deal_id) {
+                const deal = state.deals.find(d => d.id === task.deal_id);
+                if (deal) linkedEntity = `${deal.name} (Deal)`; // Deals page is for all, linking directly to deal details is more complex without deal-specific view
+            }
+
+            row.innerHTML = `
+                <td>${formatDate(task.due_date)}</td>
+                <td>${task.description}</td>
+                <td>${linkedEntity}</td>
+                <td>
+                    <button class="btn-primary mark-task-complete-btn" data-task-id="${task.id}">Complete</button>
+                    <button class="btn-secondary edit-task-btn" data-task-id="${task.id}">Edit</button>
+                    <button class="btn-danger delete-task-btn" data-task-id="${task.id}">Delete</button>
+                </td>
+            `;
+        });
+    console.log("renderDashboard: My Tasks rendered. Number of pending tasks:", state.tasks.filter(t => t.status === 'Pending').length);
+
 
     state.contact_sequences
       .filter((cs) => cs.status === "Active")
@@ -316,11 +348,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.location.href = "index.html";
   });
 
-  // debugBtn.addEventListener("click", () => { // REMOVE THIS LISTENER
-  //   console.log(JSON.stringify(state, null, 2));
-  //   alert("Current app state logged to console (F12).");
-  // });
-
   dashboardTable.addEventListener("click", async (e) => {
     const t = e.target.closest("button");
     if (!t) return;
@@ -398,6 +425,111 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     );
   });
+
+  // NEW: Event listeners for My Tasks section (Delegated)
+  document.addEventListener('click', async (e) => {
+    const targetButton = e.target;
+    if (targetButton.classList.contains('mark-task-complete-btn')) {
+        const taskId = Number(targetButton.dataset.taskId);
+        showModal('Confirm Completion', 'Mark this task as completed?', async () => {
+            console.log(`Marking task ${taskId} as complete.`);
+            const { error } = await supabase.from('tasks').update({ status: 'Completed' }).eq('id', taskId);
+            if (error) {
+                console.error('Error marking task complete:', error.message);
+                alert('Error: ' + error.message);
+            } else {
+                console.log('Task marked complete. Reloading data.');
+                await loadAllData();
+                hideModal();
+            }
+        });
+    } else if (targetButton.classList.contains('delete-task-btn')) {
+        const taskId = Number(targetButton.dataset.taskId);
+        showModal('Confirm Deletion', 'Are you sure you want to delete this task? This cannot be undone.', async () => {
+            console.log(`Deleting task ${taskId}.`);
+            const { error } = await supabase.from('tasks').delete().eq('id', taskId);
+            if (error) {
+                console.error('Error deleting task:', error.message);
+                alert('Error: ' + error.message);
+            } else {
+                console.log('Task deleted. Reloading data.');
+                await loadAllData();
+                hideModal();
+            }
+        });
+    } else if (targetButton.classList.contains('edit-task-btn')) {
+        const taskId = Number(targetButton.dataset.taskId);
+        const task = state.tasks.find(t => t.id === taskId);
+        if (!task) {
+            alert('Task not found.');
+            return;
+        }
+
+        // Fetch contacts, accounts, and deals for dropdowns
+        const contactsOptions = state.contacts.map(c => `<option value="${c.id}" ${c.id === task.contact_id ? 'selected' : ''}>${c.first_name} ${c.last_name} (Contact)</option>`).join('');
+        const accountsOptions = state.accounts.map(a => `<option value="${a.id}" ${a.id === task.account_id ? 'selected' : ''}>${a.name} (Account)</option>`).join('');
+        const dealsOptions = state.deals.map(d => `<option value="${d.id}" ${d.id === task.deal_id ? 'selected' : ''}>${d.name} (Deal)</option>`).join('');
+
+        showModal(
+            'Edit Task',
+            `
+            <label>Description:</label><input type="text" id="modal-task-description" value="${task.description}" required><br>
+            <label>Due Date:</label><input type="date" id="modal-task-due-date" value="${task.due_date ? task.due_date.substring(0, 10) : ''}"><br>
+            <label>Link To:</label>
+            <select id="modal-task-linked-entity">
+                <option value="">-- None --</option>
+                <optgroup label="Contacts">${contactsOptions}</optgroup>
+                <optgroup label="Accounts">${accountsOptions}</optgroup>
+                <optgroup label="Deals">${dealsOptions}</optgroup>
+            </select>
+            `,
+            async () => {
+                const newDescription = document.getElementById('modal-task-description').value.trim();
+                const newDueDate = document.getElementById('modal-task-due-date').value;
+                const linkedEntityValue = document.getElementById('modal-task-linked-entity').value;
+
+                if (!newDescription) {
+                    alert('Task description is required.');
+                    return;
+                }
+
+                const updateData = {
+                    description: newDescription,
+                    due_date: newDueDate || null,
+                    contact_id: null,
+                    account_id: null,
+                    deal_id: null
+                };
+
+                // Determine linked entity type and set the correct ID
+                const selectedContact = state.contacts.find(c => c.id == linkedEntityValue);
+                const selectedAccount = state.accounts.find(a => a.id == linkedEntityValue);
+                const selectedDeal = state.deals.find(d => d.id == linkedEntityValue);
+
+                if (selectedContact) {
+                    updateData.contact_id = selectedContact.id;
+                } else if (selectedAccount) {
+                    updateData.account_id = selectedAccount.id;
+                } else if (selectedDeal) {
+                    updateData.deal_id = selectedDeal.id;
+                }
+
+                console.log('Updating task:', taskId, updateData);
+                const { error } = await supabase.from('tasks').update(updateData).eq('id', taskId);
+
+                if (error) {
+                    console.error('Error updating task:', error.message);
+                    alert('Error: ' + error.message);
+                } else {
+                    console.log('Task updated. Reloading data.');
+                    await loadAllData();
+                    hideModal();
+                }
+            }
+        );
+    }
+  });
+
 
   // --- App Initialization (Dashboard Page) ---
   const savedTheme = localStorage.getItem('crm-theme') || 'dark';
