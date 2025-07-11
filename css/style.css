@@ -227,13 +227,13 @@ body:not(.theme-green) .nav-button {
 
 /* General Active Button Styling (for nav buttons and new toggle buttons) */
 .nav-button.active,
-.btn-secondary.active { /* TARGETS ACTIVE SECONDARY BUTTONS LIKE THE TOGGLE */
-  background-color: var(--primary-blue); /* Distinct background color */
-  color: var(--text-light); /* Light text for contrast */
-  font-weight: bold; /* Make text bold */
-  border: 1px solid var(--primary-blue); /* Add a border */
-  box-shadow: 0 0 10px rgba(74, 144, 226, 0.6); /* Clearer shadow/glow */
-  transform: translateY(-1px); /* Slight lift for active state */
+.btn-secondary.active {
+  background-color: var(--primary-blue);
+  color: var(--text-light);
+  font-weight: bold;
+  border: 1px solid var(--primary-blue);
+  box-shadow: 0 0 10px rgba(74, 144, 226, 0.6);
+  transform: translateY(-1px);
 }
 
 body.theme-dark .nav-button.active {
@@ -243,10 +243,10 @@ body.theme-dark .nav-button.active {
 /* FIX: Active nav button & active secondary button for Green Theme */
 body.theme-green .nav-button.active,
 body.theme-green .btn-secondary.active {
-  background-color: transparent; /* Keep transparent as per green theme style */
-  border: 1px solid var(--text-light); /* Bright green border */
-  color: var(--text-light); /* Bright green text */
-  box-shadow: 0 0 10px rgba(0, 255, 65, 0.6); /* Green glowing shadow */
+  background-color: transparent;
+  border: 1px solid var(--text-light);
+  color: var(--text-light);
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.6);
 }
 
 
@@ -853,6 +853,18 @@ body.theme-dark .metric-card {
   right: 5px;
   white-space: nowrap;
 }
+
+/* NEW: Style for the roll-up quota display */
+.metric-total-quota-display {
+    font-size: 16px; /* Smaller than percentage, but clear */
+    color: var(--text-medium); /* Match text-medium color */
+    position: absolute;
+    bottom: 5px;
+    left: 5px; /* Position it opposite to the percentage */
+    white-space: nowrap;
+    opacity: 0.8; /* Slightly subtle */
+}
+
 
 .contact-name-link,
 .deal-name-link {
