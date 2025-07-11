@@ -1,5 +1,6 @@
 // js/dashboard.js
-import { SUPABASE_URL, SUPABASE_ANON_KEY, MONTHLY_QUOTA, formatDate, formatCurrencyK, addDays, themes, setupModalListeners, showModal, hideModal } from './shared_constants.js';
+// UPDATED: Import setupHamburgerMenuToggle
+import { SUPABASE_URL, SUPABASE_ANON_KEY, MONTHLY_QUOTA, formatDate, formatCurrencyK, addDays, themes, setupModalListeners, showModal, hideModal, setupHamburgerMenuToggle } from './shared_constants.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -14,6 +15,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     contact_sequences: [],
     deals: [],
     tasks: [],
+    currentUserQuota: 0,
+    allUsersQuotas: []
   };
 
   // --- DOM Element Selectors (Dashboard specific) ---
@@ -28,6 +31,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const metricCurrentCommit = document.getElementById("metric-current-commit");
   const metricBestCase = document.getElementById("metric-best-case");
   const metricFunnel = document.getElementById("metric-funnel");
+  // REMOVED: Hamburger button selector - now handled by setupHamburgerMenuToggle in shared_constants.js
+  // const hamburgerBtn = document.getElementById("hamburger-btn");
+
 
   // --- Theme Toggle Logic ---
   let currentThemeIndex = 0;
@@ -81,24 +87,40 @@ document.addEventListener("DOMContentLoaded", async () => {
               result.value.error.message
             );
             state[tableName] = [];
+            if (tableName === 'currentUserQuota' && result.value.error.code === 'PGRST116') {
+                console.warn(`loadAllData: No quota found for current user (${state.currentUser.id}). Defaulting to 0.`);
+                state.currentUserQuota = 0;
+            } else if (tableName === 'deals' && state.dealsViewMode === 'all' && result.value.error.code === '42501') {
+                alert("RLS Warning: You might not have permission to view other users' deals. Please check Supabase RLS policies for the 'deals' table if you expect to see more data.");
+            } else if (tableName === 'allUsersQuotas' && result.value.error.code === '42501') {
+                 console.warn("loadAllData: Not authorized to fetch all user quotas. Manager RLS for user_quotas might be missing.");
+                 state.allUsersQuotas = [];
+            }
           } else {
-            state[tableName] = result.value.data || [];
+            console.log(`loadAllData: Fetched ${tableName} data:`, result.value.data);
+            if (tableName === "currentUserQuota") {
+                state.currentUserQuota = result.value.data.monthly_quota || 0;
+            } else if (tableName === "allUsersQuotas") {
+                state.allUsersQuotas = result.value.data || [];
+            }
+            else {
+                state[tableName] = result.value.data || [];
+            }
           }
         } else {
           console.error(`loadAllData: Failed to fetch ${tableName}:`, result.reason);
           state[tableName] = [];
         }
       });
-      console.log("loadAllData: All data fetched. Calling render functions.");
     } catch (error) {
-      console.error("loadAllData: Critical error in loadAllData:", error);
+      console.error("Critical error in loadAllData:", error);
     } finally {
       renderDashboard();
       renderDealsMetrics();
     }
   }
 
-  // --- Render Functions ---
+  // --- Render Functions (Defined as function declarations to ensure hoisting) ---
   function renderDashboard() {
     if (!dashboardTable || !recentActivitiesTable || !allTasksTable || !myTasksTable) return;
     console.log("renderDashboard: Starting render process.");
@@ -118,7 +140,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           const isDue = nextStepDate <= today;
           const isActive = cs.status === "Active";
 
-          if (cs.id === 5) { // Debugging specific csId (from previous logs)
+          if (cs.id === 5) {
               console.log(`renderDashboard: Checking csId 5 -- Raw DB Date: ${cs.next_step_due_date}, Normalized Date for Comparison: ${nextStepDate.toISOString()}, IsDue: ${isDue}, Status: ${cs.status}, IsActive: ${isActive}`);
           }
           return isDue && isActive;
@@ -165,7 +187,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         row.innerHTML = `<td>${formatDate(cs.next_step_due_date)}</td><td>${contact.first_name} ${contact.last_name}</td><td>${sequence.name}</td><td>${step.step_number}: ${step.type}</td><td>${desc}</td><td>${btnHtml}</td>`;
     });
 
-    // NEW: Render My Tasks
+    // Render My Tasks
     state.tasks
         .filter(task => task.status === 'Pending')
         .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
@@ -226,45 +248,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
   }
 
+  // Dummy renderDealsMetrics in dashboard.js (as dashboard is not supposed to render it)
   function renderDealsMetrics() {
-    if (!metricCurrentCommit) return;
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-    let currentCommit = 0;
-    let bestCase = 0;
-    let totalFunnel = 0;
-    state.deals.forEach((deal) => {
-      const dealCloseDate = deal.close_month ?
-        new Date(deal.close_month) :
-        null;
-      const isCurrentMonth =
-        dealCloseDate &&
-        dealCloseDate.getMonth() === currentMonth &&
-        dealCloseDate.getFullYear() === currentYear;
-      totalFunnel += deal.mrc || 0;
-      if (isCurrentMonth) {
-        bestCase += deal.mrc || 0;
-        if (deal.is_committed) {
-          currentCommit += deal.mrc || 0;
-        }
-      }
-    });
-    const commitPercentage =
-      MONTHLY_QUOTA > 0 ?
-      ((currentCommit / MONTHLY_QUOTA) * 100).toFixed(1) :
-      0;
-    const bestCasePercentage =
-      MONTHLY_QUOTA > 0 ? ((bestCase / MONTHLY_QUOTA) * 100).toFixed(1) : 0;
-    metricCurrentCommit.textContent = formatCurrencyK(currentCommit);
-    metricBestCase.textContent = formatCurrencyK(bestCase);
-    metricFunnel.textContent = formatCurrencyK(totalFunnel);
-    document.getElementById(
-      "commit-quota-percent"
-    ).textContent = `${commitPercentage}%`;
-    document.getElementById(
-      "best-case-quota-percent"
-    ).textContent = `${bestCasePercentage}%`;
+    // This function is empty as dashboard.js should not manage Deals Metrics directly.
   }
+
 
   async function completeStep(csId) {
     console.log(`completeStep: Attempting to complete step for csId: ${csId}`);
@@ -400,7 +388,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           .from("contact_sequences")
           .update({
             current_step_number: newStepNumber,
-            next_step_due_date: getStartOfLocalDayISO(), // Uses the new utility function
+            next_step_due_date: getStartOfLocalDayISO(),
             status: "Active"
           })
           .eq("id", csId)
@@ -426,13 +414,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   });
 
-  // NEW: Event listeners for My Tasks section (Delegated)
+  // Event listeners for My Tasks section (Delegated)
   document.addEventListener('click', async (e) => {
     const targetButton = e.target;
-    // Handlers for "My Tasks" buttons
     if (targetButton.classList.contains('mark-task-complete-btn')) {
-        const taskId = targetButton.dataset.taskId; // CORRECTED
-        console.log("Mark complete button clicked, taskId:", taskId); // ADDED LOG
+        const taskId = targetButton.dataset.taskId;
+        console.log("Mark complete button clicked, taskId:", taskId);
         showModal('Confirm Completion', 'Mark this task as completed?', async () => {
             console.log(`Marking task ${taskId} as complete.`);
             const { error } = await supabase.from('tasks').update({ status: 'Completed' }).eq('id', taskId);
@@ -446,8 +433,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         });
     } else if (targetButton.classList.contains('delete-task-btn')) {
-        const taskId = targetButton.dataset.taskId; // CORRECTED
-        console.log("Delete button clicked, taskId:", taskId); // ADDED LOG
+        const taskId = targetButton.dataset.taskId;
+        console.log("Delete button clicked, taskId:", taskId);
         showModal('Confirm Deletion', 'Are you sure you want to delete this task? This cannot be undone.', async () => {
             console.log(`Deleting task ${taskId}.`);
             const { error } = await supabase.from('tasks').delete().eq('id', taskId);
@@ -461,19 +448,15 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         });
     } else if (targetButton.classList.contains('edit-task-btn')) {
-        const taskId = targetButton.dataset.taskId; // CORRECTED
-        console.log("Edit button clicked, taskId:", taskId); // ADDED LOG
+        const taskId = targetButton.dataset.taskId;
+        console.log("Edit button clicked, taskId:", taskId);
         const task = state.tasks.find(t => t.id === taskId);
         if (!task) {
-            console.error('Task not found in state for ID:', taskId); // IMPROVED ERROR LOG
+            console.error('Task not found in state for ID:', taskId);
             alert('Task not found.');
             return;
         }
 
-        // Fetch contacts, accounts, and deals for dropdowns
-        // Ensure that IDs are used directly, not converted to Number, if linking by UUID.
-        // If contact_id/account_id/deal_id are bigint (numbers) in DB, then Number() conversion might be needed for those specifically.
-        // Assuming contact_id, account_id, deal_id are bigint (numbers) based on previous schema.
         const contactsOptions = state.contacts.map(c => `<option value="c-${c.id}" ${c.id === task.contact_id ? 'selected' : ''}>${c.first_name} ${c.last_name} (Contact)</option>`).join('');
         const accountsOptions = state.accounts.map(a => `<option value="a-${a.id}" ${a.id === task.account_id ? 'selected' : ''}>${a.name} (Account)</option>`).join('');
         const dealsOptions = state.deals.map(d => `<option value="d-${d.id}" ${d.id === task.deal_id ? 'selected' : ''}>${d.name} (Deal)</option>`).join('');
@@ -509,18 +492,20 @@ document.addEventListener("DOMContentLoaded", async () => {
                     deal_id: null
                 };
 
-                // Determine linked entity type and set the correct ID
-                // Ensure correct type conversion for linked entity IDs (bigint in DB)
-                if (linkedEntityValue.startsWith('c-')) {
-                    updateData.contact_id = Number(linkedEntityValue.substring(2));
-                } else if (linkedEntityValue.startsWith('a-')) {
-                    updateData.account_id = Number(linkedEntityValue.substring(2));
-                } else if (linkedEntityValue.startsWith('d-')) {
-                    updateData.deal_id = Number(linkedEntityValue.substring(2));
+                const selectedContact = state.contacts.find(c => c.id == linkedEntityValue);
+                const selectedAccount = state.accounts.find(a => a.id == linkedEntityValue);
+                const selectedDeal = state.deals.find(d => d.id == linkedEntityValue);
+
+                if (selectedContact) {
+                    updateData.contact_id = selectedContact.id;
+                } else if (selectedAccount) {
+                    updateData.account_id = selectedAccount.id;
+                } else if (selectedDeal) {
+                    updateData.deal_id = selectedDeal.id;
                 }
 
                 console.log('Updating task:', taskId, updateData);
-                const { error } = await supabase.from('tasks').update(updateData).eq('id', taskId); // taskId is UUID string here
+                const { error } = await supabase.from('tasks').update(updateData).eq('id', taskId);
 
                 if (error) {
                     console.error('Error updating task:', error.message);
@@ -541,6 +526,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const savedThemeIndex = themes.indexOf(savedTheme);
   currentThemeIndex = savedThemeIndex !== -1 ? savedThemeIndex : 0;
   applyTheme(themes[currentThemeIndex]);
+
+  // Call the shared hamburger menu setup function
+  setupHamburgerMenuToggle(); // NEW: Call setupHamburgerMenuToggle
 
   // Check user session on page load
   const { data: { session } } = await supabase.auth.getSession();
