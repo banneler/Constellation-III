@@ -115,26 +115,46 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // --- Render Functions ---
-    function renderDealsChart() {
-        const ctx = document.getElementById('deals-by-stage-chart');
-        if (!ctx) return;
+function renderDealsChart() {
+    console.log("--- Chart --- Step 1: renderDealsChart() called.");
+    const chartCanvas = document.getElementById('deals-by-stage-chart');
+    const chartEmptyMessage = document.getElementById('chart-empty-message');
 
-        const stageCounts = state.deals.reduce((acc, deal) => {
-            const stage = deal.stage || 'Uncategorized';
-            acc[stage] = (acc[stage] || 0) + 1;
-            return acc;
-        }, {});
+    if (!chartCanvas || !chartEmptyMessage) {
+        console.error("--- Chart --- ERROR: Canvas or empty message element not found!");
+        return;
+    }
 
-        const labels = Object.keys(stageCounts);
-        const data = Object.values(stageCounts);
+    if (state.deals.length === 0) {
+        console.log("--- Chart --- Step 2: No deals found. Showing empty message.");
+        chartCanvas.classList.add('hidden');
+        chartEmptyMessage.classList.remove('hidden');
+        return;
+    }
+    
+    console.log(`--- Chart --- Step 2: Found ${state.deals.length} deals to render.`);
+    chartCanvas.classList.remove('hidden');
+    chartEmptyMessage.classList.add('hidden');
 
-        const chartColors = ['#4a90e2', '#50e3c2', '#f5a623', '#f8e71c', '#bd10e0', '#9013fe', '#4a4a4a'];
+    const stageCounts = state.deals.reduce((acc, deal) => {
+        const stage = deal.stage || 'Uncategorized';
+        acc[stage] = (acc[stage] || 0) + 1;
+        return acc;
+    }, {});
+    console.log("--- Chart --- Step 3: Processed deal data into counts:", stageCounts);
 
-        if (state.dealsChart) {
-            state.dealsChart.destroy();
-        }
+    const labels = Object.keys(stageCounts);
+    const data = Object.values(stageCounts);
+    const chartColors = ['#4a90e2', '#50e3c2', '#f5a623', '#f8e71c', '#bd10e0', '#9013fe', '#4a4a4a'];
 
-        state.dealsChart = new Chart(ctx, {
+    if (state.dealsChart) {
+        console.log("--- Chart --- Step 4: Destroying existing chart instance.");
+        state.dealsChart.destroy();
+    }
+
+    try {
+        console.log("--- Chart --- Step 5: Attempting to create new Chart object...");
+        state.dealsChart = new Chart(chartCanvas, { // Pass the canvas element directly
             type: 'doughnut',
             data: {
                 labels: labels,
@@ -159,7 +179,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             }
         });
+        console.log("--- Chart --- Step 6: SUCCESS! Chart created.");
+    } catch (e) {
+        console.error("--- Chart --- Step 6: FAILED to create chart.", e);
+        alert("An error occurred while creating the chart. Check the console.");
     }
+}
 
     const renderDealsPage = () => {
         if (!dealsTableBody) return;
