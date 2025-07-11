@@ -469,7 +469,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     alert('Error: ' + error.message);
                 } else {
                     console.log('Task created from Account page. Reloading data (though not reflected here).');
-                    alert('Task created successfully! See it on your Dashboard.');
+                    alert('Task created successfully!');
                     hideModal();
                 }
             }
