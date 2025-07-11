@@ -24,10 +24,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         dealsViewMode: 'mine',
         currentUserQuota: 0,
         allUsersQuotas: [],
-        dealsChart: null
+        dealsChart: null // To hold the chart instance
     };
 
-    // --- DOM Element Selectors ---
+    // --- DOM ELEMENT SELECTORS (Moved inside DOMContentLoaded) ---
+    const chartCanvas = document.getElementById('deals-by-stage-chart');
+    const chartEmptyMessage = document.getElementById('chart-empty-message');
     const logoutBtn = document.getElementById("logout-btn");
     const dealsTable = document.getElementById("deals-table");
     const dealsTableBody = document.querySelector("#deals-table tbody");
@@ -44,7 +46,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const commitTotalQuota = document.getElementById("commit-total-quota");
     const bestCaseTotalQuota = document.getElementById("best-case-total-quota");
 
-    // --- Theme Logic ---
+    // --- Theme Toggle Logic ---
     let currentThemeIndex = 0;
     function applyTheme(themeName) {
         if (!themeNameSpan) return;
@@ -60,7 +62,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         applyTheme(newTheme);
     }
 
-    // --- Data Fetching (Corrected) ---
+    // --- Data Fetching ---
     async function loadAllData() {
         if (!state.currentUser) return;
 
@@ -69,10 +71,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             dealsQuery.eq("user_id", state.currentUser.id);
         }
 
-        // CORRECTED: Added the user_id filter for accounts
         const accountsQuery = supabase.from("accounts").select("*").eq("user_id", state.currentUser.id);
-        
-        // Made quota query more resilient by removing .single()
         const currentUserQuotaQuery = supabase.from("user_quotas").select("monthly_quota").eq("user_id", state.currentUser.id);
 
         let allQuotasQuery;
@@ -94,14 +93,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const tableName = allTableNames[index];
                 if (result.status === "fulfilled" && !result.value.error) {
                     if (tableName === "currentUserQuota") {
-                        // Handle array result from quota query
                         state.currentUserQuota = result.value.data?.[0]?.monthly_quota || 0;
                     } else {
                         state[tableName] = result.value.data || [];
                     }
                 } else {
                     console.error(`Error fetching ${tableName}:`, result.status === 'fulfilled' ? result.value.error?.message : result.reason);
-                    if (tableName === 'currentUserQuota') state.currentUserQuota = 0;
+                    if(tableName === 'currentUserQuota') state.currentUserQuota = 0;
                     else state[tableName] = [];
                 }
             });
@@ -115,46 +113,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // --- Render Functions ---
-function renderDealsChart() {
-    console.log("--- Chart --- Step 1: renderDealsChart() called.");
-    const chartCanvas = document.getElementById('deals-by-stage-chart');
-    const chartEmptyMessage = document.getElementById('chart-empty-message');
+    function renderDealsChart() {
+        if (!chartCanvas || !chartEmptyMessage) return;
 
-    if (!chartCanvas || !chartEmptyMessage) {
-        console.error("--- Chart --- ERROR: Canvas or empty message element not found!");
-        return;
-    }
+        if (state.deals.length === 0) {
+            chartCanvas.classList.add('hidden');
+            chartEmptyMessage.classList.remove('hidden');
+            return;
+        }
+        chartCanvas.classList.remove('hidden');
+        chartEmptyMessage.classList.add('hidden');
 
-    if (state.deals.length === 0) {
-        console.log("--- Chart --- Step 2: No deals found. Showing empty message.");
-        chartCanvas.classList.add('hidden');
-        chartEmptyMessage.classList.remove('hidden');
-        return;
-    }
-    
-    console.log(`--- Chart --- Step 2: Found ${state.deals.length} deals to render.`);
-    chartCanvas.classList.remove('hidden');
-    chartEmptyMessage.classList.add('hidden');
+        const stageCounts = state.deals.reduce((acc, deal) => {
+            const stage = deal.stage || 'Uncategorized';
+            acc[stage] = (acc[stage] || 0) + 1;
+            return acc;
+        }, {});
 
-    const stageCounts = state.deals.reduce((acc, deal) => {
-        const stage = deal.stage || 'Uncategorized';
-        acc[stage] = (acc[stage] || 0) + 1;
-        return acc;
-    }, {});
-    console.log("--- Chart --- Step 3: Processed deal data into counts:", stageCounts);
+        const labels = Object.keys(stageCounts);
+        const data = Object.values(stageCounts);
+        const chartColors = ['#4a90e2', '#50e3c2', '#f5a623', '#f8e71c', '#bd10e0', '#9013fe', '#4a4a4a'];
 
-    const labels = Object.keys(stageCounts);
-    const data = Object.values(stageCounts);
-    const chartColors = ['#4a90e2', '#50e3c2', '#f5a623', '#f8e71c', '#bd10e0', '#9013fe', '#4a4a4a'];
+        if (state.dealsChart) {
+            state.dealsChart.destroy();
+        }
 
-    if (state.dealsChart) {
-        console.log("--- Chart --- Step 4: Destroying existing chart instance.");
-        state.dealsChart.destroy();
-    }
-
-    try {
-        console.log("--- Chart --- Step 5: Attempting to create new Chart object...");
-        state.dealsChart = new Chart(chartCanvas, { // Pass the canvas element directly
+        state.dealsChart = new Chart(chartCanvas, {
             type: 'doughnut',
             data: {
                 labels: labels,
@@ -179,12 +163,7 @@ function renderDealsChart() {
                 }
             }
         });
-        console.log("--- Chart --- Step 6: SUCCESS! Chart created.");
-    } catch (e) {
-        console.error("--- Chart --- Step 6: FAILED to create chart.", e);
-        alert("An error occurred while creating the chart. Check the console.");
     }
-}
 
     const renderDealsPage = () => {
         if (!dealsTableBody) return;
@@ -345,7 +324,6 @@ function renderDealsChart() {
         currentThemeIndex = savedThemeIndex !== -1 ? savedThemeIndex : 0;
         applyTheme(themes[currentThemeIndex]);
         updateActiveNavLink();
-
         supabase.auth.getSession().then(async ({ data: { session } }) => {
             if (session) {
                 state.currentUser = session.user;
