@@ -21,7 +21,7 @@
   --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --logo-primary-color: var(--primary-blue);
   --logo-secondary-color: var(--text-light);
-  --meeting-purple: #8A2BE2;
+  --meeting-purple: #8A2BE2; /* New: A default moderate purple */
 }
 
 /* Dark Theme */
@@ -45,7 +45,7 @@ body.theme-dark {
   --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --logo-primary-color: var(--primary-blue);
   --logo-secondary-color: var(--text-light);
-  --meeting-purple: #8A2BE2;
+  --meeting-purple: #8A2BE2; /* Dark theme purple */
 }
 
 /* Light Theme */
@@ -69,7 +69,7 @@ body.theme-light {
   --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --logo-primary-color: var(--primary-blue);
   --logo-secondary-color: var(--text-light);
-  --meeting-purple: #6A0DAD;
+  --meeting-purple: #6A0DAD; /* Light theme purple (maybe a bit darker for contrast) */
 }
 
 /* Green Screen Theme */
@@ -91,9 +91,9 @@ body.theme-green {
   --shadow-medium: rgba(0, 255, 65, 0.2);
   --shadow-strong: rgba(0, 255, 65, 0.3);
   --font-main: 'Courier New', Courier, monospace;
-  --logo-primary-color: var(--text-medium);
-  --logo-secondary-color: var(--bg-dark);
-  --meeting-purple: #9400D3;
+  --logo-primary-color: var(--text-medium); /* Inner constellation to text-medium (darker green) */
+  --logo-secondary-color: var(--bg-dark);  /* Outer C/text blends with dark background */
+  --meeting-purple: #9400D3; /* Green theme purple (using a shade that stands out against green) */
 }
 
 /* --- GLOBAL STYLES --- */
@@ -186,12 +186,6 @@ body.theme-dark .auth-logo path[fill="#010101"] {
   transition: background 0.3s;
 }
 
-/* NEW: Style for when sidebar is open on mobile */
-.crm-container.sidebar-open .nav-sidebar {
-    transform: translateX(0); /* Slides the sidebar in */
-}
-
-
 .nav-sidebar {
   width: 200px;
   background-color: var(--bg-light);
@@ -200,8 +194,8 @@ body.theme-dark .auth-logo path[fill="#010101"] {
   flex-direction: column;
   flex-shrink: 0;
   box-shadow: 4px 0 10px var(--shadow-medium);
-  transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s ease-in-out; /* Added transform transition */
-  overflow-y: auto; /* Allow sidebar content to scroll */
+  transition: background-color 0.3s, box-shadow 0.3s;
+  overflow: visible; /* Ensures SVG is not clipped */
 }
 
 body:not(.theme-green) .nav-sidebar {
@@ -233,13 +227,13 @@ body:not(.theme-green) .nav-button {
 
 /* General Active Button Styling (for nav buttons and new toggle buttons) */
 .nav-button.active,
-.btn-secondary.active {
-  background-color: var(--primary-blue);
-  color: var(--text-light);
-  font-weight: bold;
-  border: 1px solid var(--primary-blue);
-  box-shadow: 0 0 10px rgba(74, 144, 226, 0.6);
-  transform: translateY(-1px);
+.btn-secondary.active { /* TARGETS ACTIVE SECONDARY BUTTONS LIKE THE TOGGLE */
+  background-color: var(--primary-blue); /* Distinct background color */
+  color: var(--text-light); /* Light text for contrast */
+  font-weight: bold; /* Make text bold */
+  border: 1px solid var(--primary-blue); /* Add a border */
+  box-shadow: 0 0 10px rgba(74, 144, 226, 0.6); /* Clearer shadow/glow */
+  transform: translateY(-1px); /* Slight lift for active state */
 }
 
 body.theme-dark .nav-button.active {
@@ -249,10 +243,10 @@ body.theme-dark .nav-button.active {
 /* FIX: Active nav button & active secondary button for Green Theme */
 body.theme-green .nav-button.active,
 body.theme-green .btn-secondary.active {
-  background-color: transparent;
-  border: 1px solid var(--text-light);
-  color: var(--text-light);
-  box-shadow: 0 0 10px rgba(0, 255, 65, 0.6);
+  background-color: transparent; /* Keep transparent as per green theme style */
+  border: 1px solid var(--text-light); /* Bright green border */
+  color: var(--text-light); /* Bright green text */
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.6); /* Green glowing shadow */
 }
 
 
@@ -860,18 +854,6 @@ body.theme-dark .metric-card {
   white-space: nowrap;
 }
 
-/* NEW: Style for the roll-up quota display */
-.metric-total-quota-display {
-    font-size: 16px; /* Smaller than percentage, but clear */
-    color: var(--text-medium); /* Match text-medium color */
-    position: absolute;
-    bottom: 5px;
-    left: 5px; /* Position it opposite to the percentage */
-    white-space: nowrap;
-    opacity: 0.8; /* Slightly subtle */
-}
-
-
 .contact-name-link,
 .deal-name-link {
   cursor: pointer;
@@ -976,156 +958,5 @@ body:not(.theme-green) .auth-box {
   }
   100% {
     transform: rotate(360deg);
-  }
-}
-/* --- RESPONSIVE DESIGN --- */
-/* For screens smaller than 768px (common breakpoint for tablets/mobile) */
-@media (max-width: 768px) {
-  /* Layout: Main Container & Sidebar */
-  .crm-container {
-    flex-direction: column; /* Stack sidebar and content vertically */
-    height: auto; /* Allow height to adjust to content */
-    min-height: 100vh; /* Ensure it still takes full viewport height if content is short */
-    padding-top: 60px; /* Space for fixed header bar */
-  }
-
-  .nav-sidebar {
-    width: 100%; /* Sidebar takes full width for header bar */
-    height: 60px; /* Fixed height for header bar */
-    padding: 10px 20px; /* Adjust padding */
-    flex-direction: row; /* Align items horizontally */
-    justify-content: space-between; /* Space out items */
-    align-items: center; /* Center items vertically */
-    box-shadow: 0 4px 10px var(--shadow-medium); /* Shadow at bottom */
-    position: fixed; /* Fix to top of viewport */
-    top: 0;
-    left: 0;
-    z-index: 10; /* Ensure it's above main content */
-    border-radius: 0; /* Remove border radius */
-    transform: translateX(0); /* Always visible as header */
-    transition: transform 0.3s ease-in-out; /* Add transition for sliding */
-  }
-  
-  /* Mobile Header Bar Elements Ordering & Sizing */
-  .nav-sidebar .nav-logo { /* The SVG logo becomes smaller in the mobile header */
-      display: block; /* Ensure it's visible */
-      width: 50px; /* INCREASED SIZE */
-      height: 50px; /* INCREASED SIZE */
-      margin: 0;
-      order: 1; /* Place logo first */
-  }
-
-  /* Hide the main navigation buttons by default in the mobile header bar */
-  .nav-sidebar a.nav-button:not(#theme-toggle-btn):not(#logout-btn):not(#hamburger-btn) { /* Explicitly exclude hamburger too */
-      display: none; /* Hide main nav links */
-  }
-  /* Ensure theme toggle and logout are correctly placed in the header */
-  .nav-sidebar #theme-toggle-btn,
-  .nav-sidebar #logout-btn {
-      margin: 0 5px; /* Adjust spacing */
-      padding: 8px 12px;
-      font-size: 14px;
-      order: 3; /* Place after hamburger */
-  }
-  .hamburger-menu {
-      display: flex; /* Show hamburger menu button on mobile */
-      order: 2; /* Position between logo and other buttons */
-  }
-
-  /* Main Content Area */
-  .content-area {
-    width: 100%; /* Main content takes full width */
-    padding: 15px; /* Adjust padding */
-    height: auto; /* Allow content to dictate height */
-  }
-
-  /* Split views (Contacts, Accounts, Sequences) - stack them vertically */
-  .split-view {
-    flex-direction: column; /* Stack list and details vertically */
-    gap: 15px; /* Reduce gap */
-    height: auto; /* Allow height to adjust */
-  }
-
-  .item-list-container {
-    width: 100%; /* List takes full width */
-  }
-
-  .details-panel {
-    width: 100%; /* Details panel takes full width */
-    padding: 15px; /* Adjust padding */
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr; /* Stack form fields vertically */
-    gap: 0; /* Remove gap */
-  }
-
-  /* Tables: Ensure horizontal scrolling */
-  .table-container {
-    overflow-x: auto; /* Keep horizontal scroll for tables */
-  }
-
-  /* Mobile Sidebar Styling when open (Overlay) */
-  .crm-container.sidebar-open .nav-sidebar {
-    width: 250px; /* Width of the sliding menu */
-    height: 100vh; /* Take full viewport height */
-    position: fixed; /* Fixed position for overlay */
-    top: 0;
-    left: 0;
-    flex-direction: column; /* Stack items vertically */
-    align-items: flex-start; /* Align nav items left */
-    padding: 20px; /* Reset padding for vertical layout */
-    z-index: 99; /* Below modal, above main content */
-    box-shadow: 4px 0 15px var(--shadow-strong);
-    transform: translateX(0); /* Ensure it slides in */
-  }
-  /* When sidebar is open, show all nav-buttons, including the main ones */
-  .crm-container.sidebar-open .nav-sidebar a.nav-button {
-      display: block !important; /* IMPORTANT: Override the 'display: none' from above */
-      width: 100%;
-      text-align: left;
-      margin: 5px 0;
-      padding: 12px 20px;
-  }
-  /* Re-hide the hamburger menu when the sidebar is open as a full overlay */
-  .crm-container.sidebar-open .hamburger-menu {
-      display: none;
-  }
-  /* Restore the logo visibility and sizing in the opened sidebar (if needed, e.g., at the top) */
-  .crm-container.sidebar-open .nav-sidebar .nav-logo {
-      display: block; /* Show logo inside the opened menu */
-      width: 180px; /* Restore original size for vertical layout */
-      height: auto; /* Adjust height automatically */
-      margin: 0 auto 20px auto; /* Center with bottom margin */
-  }
-  /* Hide Theme and Logout buttons when sidebar is open as an overlay */
-  .crm-container.sidebar-open .nav-sidebar #theme-toggle-btn,
-  .crm-container.sidebar-open .nav-sidebar #logout-btn {
-      display: none !important; /* Hide these when sidebar is full overlay */
-  }
-}
-
-/* For very small screens (e.g., phones in portrait) */
-@media (max-width: 480px) {
-  .nav-sidebar {
-      padding: 10px 10px; /* Less padding in header */
-  }
-  .nav-sidebar #theme-toggle-btn,
-  .nav-sidebar #logout-btn {
-      font-size: 12px; /* Smaller font for header buttons */
-      padding: 6px 10px;
-  }
-  .metric-card {
-    min-width: 150px; /* Adjust minimum width for metric cards */
-    padding: 15px;
-  }
-  .metric-value {
-    font-size: 28px; /* Smaller font for values */
-  }
-  .metric-quota-percent {
-    font-size: 18px; /* Smaller font for percentages */
-  }
-  .metric-total-quota-display {
-    font-size: 14px;
   }
 }
