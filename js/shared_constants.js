@@ -3,7 +3,7 @@ export const SUPABASE_URL = "https://pjxcciepfypzrfmlfchj.supabase.co";
 export const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqeGNjaWVwZnlwenJmbWxmY2hqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMTU4NDQsImV4cCI6MjA2NzY5MTg0NH0.m_jyE0e4QFevI-mGJHYlGmA12lXf8XoMDoiljUav79c";
 
-export const MONTHLY_QUOTA = 5000;
+export const MONTHLY_QUOTA = 5000; // This constant is effectively overridden by user_quotas now, but kept for compatibility.
 export const themes = ['dark', 'light', 'green'];
 
 export const formatDate = (ds) => (ds ? new Date(ds).toLocaleString() : "");
@@ -23,9 +23,10 @@ export const formatCurrencyK = (value) => {
   const valInK = value / 1000;
   return `$${valInK.toFixed(1)}K`;
 };
+// NEW: Function to format currency as full value (e.g., $10,000)
 export const formatCurrency = (value) => {
     if (value === null || isNaN(value)) return "$0";
-    return `$${value.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+    return `$${value.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`; // Formats with commas, no decimals
 };
 
 export const addDays = (d, days) => {
@@ -52,7 +53,7 @@ export const parseCsvRow = (row) => {
   return r;
 };
 
-// Modal functions
+// Modal functions (can also be moved here)
 let onConfirmCallback = null;
 export const showModal = (title, bodyHtml, onConfirm) => {
   const modalTitle = document.getElementById("modal-title");
@@ -85,33 +86,4 @@ export const setupModalListeners = () => {
     if (modalCancelBtn) {
         modalCancelBtn.addEventListener("click", hideModal);
     }
-};
-
-// NEW: Hamburger menu toggle setup
-export const setupHamburgerMenuToggle = () => {
-  const hamburgerBtn = document.getElementById('hamburger-btn');
-  const crmContainer = document.querySelector('.crm-container');
-
-  if (hamburgerBtn && crmContainer) {
-    hamburgerBtn.addEventListener('click', () => {
-      crmContainer.classList.toggle('sidebar-open');
-      // Prevent body scrolling when sidebar overlay is open
-      document.body.style.overflow = crmContainer.classList.contains('sidebar-open') ? 'hidden' : '';
-    });
-
-    // Optional: Close sidebar if a nav button is clicked (on mobile)
-    const navButtons = crmContainer.querySelectorAll('.nav-sidebar .nav-button');
-    navButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            // Only close if sidebar is currently open (mobile view)
-            if (crmContainer.classList.contains('sidebar-open')) {
-                // Check if the screen is actually small (to avoid closing on desktop clicks)
-                if (window.innerWidth <= 768) { // Use the same breakpoint as in CSS
-                    crmContainer.classList.remove('sidebar-open');
-                    document.body.style.overflow = ''; // Restore body scroll
-                }
-            }
-        });
-    });
-  }
 };
