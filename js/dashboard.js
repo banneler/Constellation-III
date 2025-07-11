@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     activities: [],
     contact_sequences: [],
     deals: [],
-    tasks: [], // NEW: Add tasks array to state
+    tasks: [],
   };
 
   // --- DOM Element Selectors (Dashboard specific) ---
@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const recentActivitiesTable = document.querySelector("#recent-activities-table tbody");
   const allTasksTable = document.querySelector("#all-tasks-table tbody");
   const myTasksTable = document.querySelector("#my-tasks-table tbody");
-  const addNewTaskBtn = document.getElementById("add-new-task-btn"); // NEW: Selector for Add New Task button
+  const addNewTaskBtn = document.getElementById("add-new-task-btn");
   const themeToggleBtn = document.getElementById("theme-toggle-btn");
   const themeNameSpan = document.getElementById("theme-name");
   const metricCurrentCommit = document.getElementById("metric-current-commit");
@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // --- Utility for getting start of local day ---
   function getStartOfLocalDayISO() {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set to the start of the *local* day
+    today.setHours(0, 0, 0, 0);
     return today.toISOString();
   }
 
@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!state.currentUser) return;
     console.log("loadAllData: Fetching all user data...");
 
-    const userSpecificTables = ["contacts", "accounts", "sequences", "activities", "contact_sequences", "deals", "tasks"]; // 'tasks' is here
+    const userSpecificTables = ["contacts", "accounts", "sequences", "activities", "contact_sequences", "deals", "tasks"];
     const publicTables = ["sequence_steps"];
 
     const userPromises = userSpecificTables.map((table) =>
@@ -167,7 +167,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // NEW: Render My Tasks
     state.tasks
-        .filter(task => task.status === 'Pending') // Only show pending tasks
+        .filter(task => task.status === 'Pending')
         .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
         .forEach(task => {
             const row = myTasksTable.insertRow();
@@ -180,7 +180,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (account) linkedEntity = `<a href="accounts.html?accountId=${account.id}" class="contact-name-link">${account.name}</a> (Account)`;
             } else if (task.deal_id) {
                 const deal = state.deals.find(d => d.id === task.deal_id);
-                if (deal) linkedEntity = `${deal.name} (Deal)`; // Deals page is for all, linking directly to deal details is more complex without deal-specific view
+                if (deal) linkedEntity = `${deal.name} (Deal)`;
             }
 
             row.innerHTML = `
@@ -348,70 +348,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.location.href = "index.html";
   });
 
-  // NEW: Add New Task Button Listener
-  if (addNewTaskBtn) { // Check if the element exists
-    addNewTaskBtn.addEventListener("click", async () => {
-        // Prepare options for linked entities
-        const contactsOptions = state.contacts.map(c => `<option value="c-${c.id}">${c.first_name} ${c.last_name}</option>`).join('');
-        const accountsOptions = state.accounts.map(a => `<option value="a-${a.id}">${a.name}</option>`).join('');
-        const dealsOptions = state.deals.map(d => `<option value="d-${d.id}">${d.name}</option>`).join('');
-
-        showModal(
-            'Create New Task',
-            `
-            <label>Description:</label><input type="text" id="modal-task-description" required><br>
-            <label>Due Date:</label><input type="date" id="modal-task-due-date"><br>
-            <label>Link To:</label>
-            <select id="modal-task-linked-entity">
-                <option value="">-- None --</option>
-                <optgroup label="Contacts">${contactsOptions}</optgroup>
-                <optgroup label="Accounts">${accountsOptions}</optgroup>
-                <optgroup label="Deals">${dealsOptions}</optgroup>
-            </select>
-            `,
-            async () => {
-                const description = document.getElementById('modal-task-description').value.trim();
-                const dueDate = document.getElementById('modal-task-due-date').value;
-                const linkedEntityValue = document.getElementById('modal-task-linked-entity').value;
-
-                if (!description) {
-                    alert('Task description is required.');
-                    return;
-                }
-
-                const newTask = {
-                    user_id: state.currentUser.id,
-                    description: description,
-                    due_date: dueDate || null,
-                    status: 'Pending'
-                };
-
-                // Determine linked entity type and set the correct ID
-                if (linkedEntityValue.startsWith('c-')) {
-                    newTask.contact_id = Number(linkedEntityValue.substring(2));
-                } else if (linkedEntityValue.startsWith('a-')) {
-                    newTask.account_id = Number(linkedEntityValue.substring(2));
-                } else if (linkedEntityValue.startsWith('d-')) {
-                    newTask.deal_id = Number(linkedEntityValue.substring(2));
-                }
-
-                console.log('Creating new task:', newTask);
-                const { error } = await supabase.from('tasks').insert([newTask]);
-
-                if (error) {
-                    console.error('Error creating task:', error.message);
-                    alert('Error: ' + error.message);
-                } else {
-                    console.log('Task created. Reloading data.');
-                    await loadAllData();
-                    hideModal();
-                }
-            }
-        );
-    });
-  }
-
-
   dashboardTable.addEventListener("click", async (e) => {
     const t = e.target.closest("button");
     if (!t) return;
@@ -495,7 +431,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const targetButton = e.target;
     // Handlers for "My Tasks" buttons
     if (targetButton.classList.contains('mark-task-complete-btn')) {
-    const taskId = targetButton.dataset.taskId; // This keeps it as a UUID string
+        const taskId = targetButton.dataset.taskId; // CORRECTED
+        console.log("Mark complete button clicked, taskId:", taskId); // ADDED LOG
         showModal('Confirm Completion', 'Mark this task as completed?', async () => {
             console.log(`Marking task ${taskId} as complete.`);
             const { error } = await supabase.from('tasks').update({ status: 'Completed' }).eq('id', taskId);
@@ -509,7 +446,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         });
     } else if (targetButton.classList.contains('delete-task-btn')) {
-        const taskId = Number(targetButton.dataset.taskId);
+        const taskId = targetButton.dataset.taskId; // CORRECTED
+        console.log("Delete button clicked, taskId:", taskId); // ADDED LOG
         showModal('Confirm Deletion', 'Are you sure you want to delete this task? This cannot be undone.', async () => {
             console.log(`Deleting task ${taskId}.`);
             const { error } = await supabase.from('tasks').delete().eq('id', taskId);
@@ -523,14 +461,19 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         });
     } else if (targetButton.classList.contains('edit-task-btn')) {
-        const taskId = Number(targetButton.dataset.taskId);
+        const taskId = targetButton.dataset.taskId; // CORRECTED
+        console.log("Edit button clicked, taskId:", taskId); // ADDED LOG
         const task = state.tasks.find(t => t.id === taskId);
         if (!task) {
+            console.error('Task not found in state for ID:', taskId); // IMPROVED ERROR LOG
             alert('Task not found.');
             return;
         }
 
         // Fetch contacts, accounts, and deals for dropdowns
+        // Ensure that IDs are used directly, not converted to Number, if linking by UUID.
+        // If contact_id/account_id/deal_id are bigint (numbers) in DB, then Number() conversion might be needed for those specifically.
+        // Assuming contact_id, account_id, deal_id are bigint (numbers) based on previous schema.
         const contactsOptions = state.contacts.map(c => `<option value="c-${c.id}" ${c.id === task.contact_id ? 'selected' : ''}>${c.first_name} ${c.last_name} (Contact)</option>`).join('');
         const accountsOptions = state.accounts.map(a => `<option value="a-${a.id}" ${a.id === task.account_id ? 'selected' : ''}>${a.name} (Account)</option>`).join('');
         const dealsOptions = state.deals.map(d => `<option value="d-${d.id}" ${d.id === task.deal_id ? 'selected' : ''}>${d.name} (Deal)</option>`).join('');
@@ -567,20 +510,17 @@ document.addEventListener("DOMContentLoaded", async () => {
                 };
 
                 // Determine linked entity type and set the correct ID
-                const selectedContact = state.contacts.find(c => c.id == linkedEntityValue);
-                const selectedAccount = state.accounts.find(a => a.id == linkedEntityValue);
-                const selectedDeal = state.deals.find(d => d.id == linkedEntityValue);
-
-                if (selectedContact) {
-                    updateData.contact_id = selectedContact.id;
-                } else if (selectedAccount) {
-                    updateData.account_id = selectedAccount.id;
-                } else if (selectedDeal) {
-                    updateData.deal_id = selectedDeal.id;
+                // Ensure correct type conversion for linked entity IDs (bigint in DB)
+                if (linkedEntityValue.startsWith('c-')) {
+                    updateData.contact_id = Number(linkedEntityValue.substring(2));
+                } else if (linkedEntityValue.startsWith('a-')) {
+                    updateData.account_id = Number(linkedEntityValue.substring(2));
+                } else if (linkedEntityValue.startsWith('d-')) {
+                    updateData.deal_id = Number(linkedEntityValue.substring(2));
                 }
 
                 console.log('Updating task:', taskId, updateData);
-                const { error } = await supabase.from('tasks').update(updateData).eq('id', taskId);
+                const { error } = await supabase.from('tasks').update(updateData).eq('id', taskId); // taskId is UUID string here
 
                 if (error) {
                     console.error('Error updating task:', error.message);
@@ -606,8 +546,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const { data: { session } } = await supabase.auth.getSession();
   if (session) {
     state.currentUser = session.user;
-    await loadAllData(); // Initial data load on page entry
+    await loadAllData();
   } else {
-    window.location.href = "index.html"; // Redirect if not signed in
+    window.location.href = "index.html";
   }
 });
