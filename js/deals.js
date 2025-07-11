@@ -24,10 +24,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         dealsViewMode: 'mine',
         currentUserQuota: 0,
         allUsersQuotas: [],
-        dealsChart: null // To hold the chart instance
+        dealsChart: null
     };
 
-    // --- DOM ELEMENT SELECTORS (Moved inside DOMContentLoaded) ---
     const chartCanvas = document.getElementById('deals-by-stage-chart');
     const chartEmptyMessage = document.getElementById('chart-empty-message');
     const logoutBtn = document.getElementById("logout-btn");
@@ -46,7 +45,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const commitTotalQuota = document.getElementById("commit-total-quota");
     const bestCaseTotalQuota = document.getElementById("best-case-total-quota");
 
-    // --- Theme Toggle Logic ---
     let currentThemeIndex = 0;
     function applyTheme(themeName) {
         if (!themeNameSpan) return;
@@ -62,31 +60,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         applyTheme(newTheme);
     }
 
-    // --- Data Fetching ---
     async function loadAllData() {
         if (!state.currentUser) return;
-
         const dealsQuery = supabase.from("deals").select("*");
         if (state.dealsViewMode === 'mine') {
             dealsQuery.eq("user_id", state.currentUser.id);
         }
-
         const accountsQuery = supabase.from("accounts").select("*").eq("user_id", state.currentUser.id);
         const currentUserQuotaQuery = supabase.from("user_quotas").select("monthly_quota").eq("user_id", state.currentUser.id);
-
         let allQuotasQuery;
         if (state.dealsViewMode === 'all' && state.currentUser.user_metadata?.is_manager === true) {
             allQuotasQuery = supabase.from("user_quotas").select("monthly_quota");
         }
-        
         const promises = [dealsQuery, accountsQuery, currentUserQuotaQuery];
         const allTableNames = ["deals", "accounts", "currentUserQuota"];
-
         if (allQuotasQuery) {
             promises.push(allQuotasQuery);
             allTableNames.push("allUsersQuotas");
         }
-
         try {
             const results = await Promise.allSettled(promises);
             results.forEach((result, index) => {
@@ -112,10 +103,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    // --- Render Functions ---
     function renderDealsChart() {
         if (!chartCanvas || !chartEmptyMessage) return;
-
         if (state.deals.length === 0) {
             chartCanvas.classList.add('hidden');
             chartEmptyMessage.classList.remove('hidden');
@@ -123,21 +112,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
         chartCanvas.classList.remove('hidden');
         chartEmptyMessage.classList.add('hidden');
-
         const stageCounts = state.deals.reduce((acc, deal) => {
             const stage = deal.stage || 'Uncategorized';
             acc[stage] = (acc[stage] || 0) + 1;
             return acc;
         }, {});
-
         const labels = Object.keys(stageCounts);
         const data = Object.values(stageCounts);
         const chartColors = ['#4a90e2', '#50e3c2', '#f5a623', '#f8e71c', '#bd10e0', '#9013fe', '#4a4a4a'];
-
         if (state.dealsChart) {
             state.dealsChart.destroy();
         }
-
         state.dealsChart = new Chart(chartCanvas, {
             type: 'doughnut',
             data: {
@@ -219,9 +204,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
         const currentMonth = new Date().getMonth();
         const currentYear = new Date().getFullYear();
-        let currentCommit = 0;
-        let bestCase = 0;
-        let totalFunnel = 0;
+        let currentCommit = 0, bestCase = 0, totalFunnel = 0;
         state.deals.forEach((deal) => {
             const dealCloseDate = deal.close_month ? new Date(deal.close_month) : null;
             const isCurrentMonth = dealCloseDate && dealCloseDate.getMonth() === currentMonth && dealCloseDate.getFullYear() === currentYear;
@@ -242,7 +225,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById("best-case-quota-percent").textContent = `${bestCasePercentage}%`;
     };
 
-    // --- EVENT LISTENER SETUP ---
     function setupPageEventListeners() {
         setupModalListeners();
         themeToggleBtn.addEventListener("click", cycleTheme);
@@ -317,7 +299,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
     
-    // --- INITIALIZATION ---
     function initializePage() {
         const savedTheme = localStorage.getItem('crm-theme') || 'dark';
         const savedThemeIndex = themes.indexOf(savedTheme);
