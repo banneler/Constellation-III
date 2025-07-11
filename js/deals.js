@@ -11,12 +11,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     dealsSortBy: "name",
     dealsSortDir: "asc",
     dealsViewMode: 'mine', // 'mine' or 'all'
-    currentUserQuota: 0, // NEW: Default quota for current user
-    allUsersQuotas: [] // NEW: For manager view to sum up all quotas
+    currentUserQuota: 0, // Default quota for current user
+    allUsersQuotas: [] // For manager view to sum up all quotas
   };
-
-  // Remove the hardcoded MONTHLY_QUOTA here (it's no longer used from shared_constants)
-  // const MONTHLY_QUOTA = 5000; // This line is conceptually removed/overridden
 
   // --- DOM Element Selectors (Deals specific) ---
   const logoutBtn = document.getElementById("logout-btn");
@@ -28,8 +25,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   const metricBestCase = document.getElementById("metric-best-case");
   const metricFunnel = document.getElementById("metric-funnel");
   const viewMyDealsBtn = document.getElementById("view-my-deals-btn");
-  const viewAllDealsBtn = document.getElementById("view-all-deals-btn");
+  const viewAllDealsBtn = document.getElementById("view-all-deals-btn"); // Changed button text in HTML
   const dealsViewToggleDiv = document.querySelector('.deals-view-toggle');
+
+  const metricCurrentCommitTitle = document.getElementById("metric-current-commit-title"); // NEW ID
+  const metricBestCaseTitle = document.getElementById("metric-best-case-title");       // NEW ID
+  const commitTotalQuota = document.getElementById("commit-total-quota");             // NEW ID
+  const bestCaseTotalQuota = document.getElementById("best-case-total-quota");         // NEW ID
 
   // --- Theme Toggle Logic ---
   let currentThemeIndex = 0;
@@ -51,20 +53,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function loadAllData() {
     if (!state.currentUser) return;
 
-    // Build the query for deals based on view mode
     const dealsQuery = supabase.from("deals").select("*");
     if (state.dealsViewMode === 'mine') {
         dealsQuery.eq("user_id", state.currentUser.id);
     }
 
-    // NEW: Quota query - fetch current user's quota
     const currentUserQuotaQuery = supabase.from("user_quotas")
                                         .select("monthly_quota")
                                         .eq("user_id", state.currentUser.id)
-                                        .single(); // Expect only one result
+                                        .single();
 
-    // NEW: All quotas query (only for managers in 'all' view)
     let allQuotasQuery;
+    // Only fetch all quotas if currently in 'all' view AND user is a manager
     if (state.dealsViewMode === 'all' && state.currentUser.user_metadata?.is_manager === true) {
         allQuotasQuery = supabase.from("user_quotas").select("monthly_quota");
     }
@@ -74,11 +74,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const promises = [
         dealsQuery,
         ...userSpecificTables.map((table) => supabase.from(table).select("*").eq("user_id", state.currentUser.id)),
-        currentUserQuotaQuery // Add current user's quota fetch
+        currentUserQuotaQuery
     ];
-    const allTableNames = ["deals", ...userSpecificTables, "currentUserQuota"]; // Add a name for the quota result
+    const allTableNames = ["deals", ...userSpecificTables, "currentUserQuota"];
 
-    // If fetching all quotas, add that promise and name
     if (allQuotasQuery) {
         promises.push(allQuotasQuery);
         allTableNames.push("allUsersQuotas");
@@ -94,16 +93,15 @@ document.addEventListener("DOMContentLoaded", async () => {
               `loadAllData: Supabase error fetching ${tableName}:`,
               result.value.error.message
             );
-            state[tableName] = []; // Default to empty array for data tables
-            // Handle specific cases for quota and RLS
-            if (tableName === 'currentUserQuota' && result.value.error.code === 'PGRST116') { // PGRST116 is 'no rows found' for .single()
+            state[tableName] = [];
+            if (tableName === 'currentUserQuota' && result.value.error.code === 'PGRST116') {
                 console.warn(`loadAllData: No quota found for current user (${state.currentUser.id}). Defaulting to 0.`);
                 state.currentUserQuota = 0;
             } else if (tableName === 'deals' && state.dealsViewMode === 'all' && result.value.error.code === '42501' && dealsViewToggleDiv && !dealsViewToggleDiv.classList.contains('hidden')) {
                 alert("RLS Warning: You might not have permission to view other users' deals. Please check Supabase RLS policies for the 'deals' table if you expect to see more data.");
             } else if (tableName === 'allUsersQuotas' && result.value.error.code === '42501') {
-                 console.warn("RLS Warning: Not authorized to fetch all user quotas. Manager RLS for user_quotas might be missing.");
-                 state.allUsersQuotas = []; // Clear all quotas if RLS blocks
+                 console.warn("loadAllData: Not authorized to fetch all user quotas. Manager RLS for user_quotas might be missing.");
+                 state.allUsersQuotas = [];
             }
           } else {
             console.log(`loadAllData: Fetched ${tableName} data:`, result.value.data);
@@ -125,7 +123,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.error("Critical error in loadAllData:", error);
     } finally {
       renderDealsPage();
-      renderDealsMetrics(); // This will now use dynamic quota
+      renderDealsMetrics();
     }
   }
 
@@ -181,31 +179,45 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const renderDealsMetrics = () => {
     if (!metricCurrentCommit) return;
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
+
+    const isManager = state.currentUser.user_metadata?.is_manager === true;
+    const isMyTeamView = state.dealsViewMode === 'all' && isManager;
+
+    // Update Metric Card Headers
+    if (metricCurrentCommitTitle && metricBestCaseTitle) {
+      metricCurrentCommitTitle.textContent = isMyTeamView ? "My Team's Current Commit" : "My Current Commit";
+      metricBestCaseTitle.textContent = isMyTeamView ? "My Team's Current Best Case" : "My Current Best Case";
+    }
+
+    // Determine the quota to use for calculations
+    let effectiveMonthlyQuota = 0;
+    if (isMyTeamView) {
+        effectiveMonthlyQuota = state.allUsersQuotas.reduce((sum, quota) => sum + (quota.monthly_quota || 0), 0);
+        if (effectiveMonthlyQuota === 0 && state.allUsersQuotas.length > 0) {
+            console.warn("renderDealsMetrics: Sum of all quotas is 0, check monthly_quota values in DB.");
+        }
+    } else {
+        effectiveMonthlyQuota = state.currentUserQuota;
+    }
+
+    // Display total quota if in 'My Team's Deals' view
+    if (commitTotalQuota && bestCaseTotalQuota) {
+        if (isMyTeamView) {
+            commitTotalQuota.textContent = `Quota: ${formatCurrencyK(effectiveMonthlyQuota)}`;
+            bestCaseTotalQuota.textContent = `Quota: ${formatCurrencyK(effectiveMonthlyQuota)}`;
+            commitTotalQuota.classList.remove('hidden');
+            bestCaseTotalQuota.classList.remove('hidden');
+        } else {
+            // Hide if not in team view
+            commitTotalQuota.classList.add('hidden');
+            bestCaseTotalQuota.classList.add('hidden');
+        }
+    }
+
+
     let currentCommit = 0;
     let bestCase = 0;
     let totalFunnel = 0;
-
-    // Determine the quota to use based on view mode and user type
-    let effectiveMonthlyQuota = 0;
-    if (state.dealsViewMode === 'mine' || state.currentUser.user_metadata?.is_manager !== true) {
-        // If 'mine' view, or if not a manager (always sees 'mine' effectively)
-        effectiveMonthlyQuota = state.currentUserQuota;
-    } else if (state.dealsViewMode === 'all' && state.currentUser.user_metadata?.is_manager === true) {
-        // If 'all' view AND manager, sum all quotas
-        effectiveMonthlyQuota = state.allUsersQuotas.reduce((sum, quota) => sum + (quota.monthly_quota || 0), 0);
-        if (effectiveMonthlyQuota === 0 && state.allUsersQuotas.length > 0) {
-          console.warn("renderDealsMetrics: Sum of all quotas is 0, check monthly_quota values in DB.");
-        }
-    }
-    // Fallback if no quota found (e.g., new user not in user_quotas table)
-    if (effectiveMonthlyQuota === 0) {
-      console.warn("renderDealsMetrics: Effective monthly quota is 0. Using fallback of 5000 for display only.");
-      effectiveMonthlyQuota = 5000; // Temporary fallback for calculation display
-    }
-    console.log("renderDealsMetrics: Using effectiveMonthlyQuota:", effectiveMonthlyQuota);
-
 
     state.deals.forEach((deal) => {
       const dealCloseDate = deal.close_month ?
