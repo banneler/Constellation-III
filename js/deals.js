@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         dealsViewMode: 'mine',
         currentUserQuota: 0,
         allUsersQuotas: [],
-        dealsChart: null // NEW: To hold the chart instance
+        dealsChart: null
     };
 
     // --- DOM Element Selectors ---
@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         applyTheme(newTheme);
     }
 
-    // --- Data Fetching ---
+    // --- Data Fetching (Corrected) ---
     async function loadAllData() {
         if (!state.currentUser) return;
 
@@ -69,13 +69,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             dealsQuery.eq("user_id", state.currentUser.id);
         }
 
-        const currentUserQuotaQuery = supabase.from("user_quotas").select("monthly_quota").eq("user_id", state.currentUser.id).single();
+        // CORRECTED: Added the user_id filter for accounts
+        const accountsQuery = supabase.from("accounts").select("*").eq("user_id", state.currentUser.id);
+        
+        // Made quota query more resilient by removing .single()
+        const currentUserQuotaQuery = supabase.from("user_quotas").select("monthly_quota").eq("user_id", state.currentUser.id);
+
         let allQuotasQuery;
         if (state.dealsViewMode === 'all' && state.currentUser.user_metadata?.is_manager === true) {
             allQuotasQuery = supabase.from("user_quotas").select("monthly_quota");
         }
         
-        const promises = [dealsQuery, supabase.from("accounts").select("*"), currentUserQuotaQuery];
+        const promises = [dealsQuery, accountsQuery, currentUserQuotaQuery];
         const allTableNames = ["deals", "accounts", "currentUserQuota"];
 
         if (allQuotasQuery) {
@@ -89,13 +94,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const tableName = allTableNames[index];
                 if (result.status === "fulfilled" && !result.value.error) {
                     if (tableName === "currentUserQuota") {
-                        state.currentUserQuota = result.value.data?.monthly_quota || 0;
+                        // Handle array result from quota query
+                        state.currentUserQuota = result.value.data?.[0]?.monthly_quota || 0;
                     } else {
                         state[tableName] = result.value.data || [];
                     }
                 } else {
                     console.error(`Error fetching ${tableName}:`, result.status === 'fulfilled' ? result.value.error?.message : result.reason);
-                    if(tableName === 'currentUserQuota') state.currentUserQuota = 0;
+                    if (tableName === 'currentUserQuota') state.currentUserQuota = 0;
                     else state[tableName] = [];
                 }
             });
@@ -104,18 +110,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         } finally {
             renderDealsPage();
             renderDealsMetrics();
-            renderDealsChart(); // NEW: Call the chart rendering function
+            renderDealsChart();
         }
     }
 
-    // --- RENDER FUNCTIONS ---
-    
-    // NEW: Function to render the deals chart
+    // --- Render Functions ---
     function renderDealsChart() {
         const ctx = document.getElementById('deals-by-stage-chart');
         if (!ctx) return;
 
-        // Group deals by stage and count them
         const stageCounts = state.deals.reduce((acc, deal) => {
             const stage = deal.stage || 'Uncategorized';
             acc[stage] = (acc[stage] || 0) + 1;
@@ -125,17 +128,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         const labels = Object.keys(stageCounts);
         const data = Object.values(stageCounts);
 
-        // Define colors for the chart segments
-        const chartColors = [
-            '#4a90e2', '#50e3c2', '#f5a623', '#f8e71c', '#bd10e0', '#9013fe', '#4a4a4a'
-        ];
+        const chartColors = ['#4a90e2', '#50e3c2', '#f5a623', '#f8e71c', '#bd10e0', '#9013fe', '#4a4a4a'];
 
-        // Destroy the old chart instance if it exists, to prevent memory leaks
         if (state.dealsChart) {
             state.dealsChart.destroy();
         }
 
-        // Create the new chart
         state.dealsChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
@@ -164,16 +162,157 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     const renderDealsPage = () => {
-        // ... this function remains unchanged
+        if (!dealsTableBody) return;
+        const dealsWithAccount = state.deals.map((deal) => {
+            const account = state.accounts.find((a) => a.id === deal.account_id);
+            return { ...deal, account_name: account ? account.name : "N/A" };
+        });
+        dealsWithAccount.sort((a, b) => {
+            const valA = a[state.dealsSortBy];
+            const valB = b[state.dealsSortBy];
+            let comparison = 0;
+            if (typeof valA === "string") { comparison = (valA || "").localeCompare(valB || ""); } 
+            else { if (valA > valB) comparison = 1; else if (valA < valB) comparison = -1; }
+            return state.dealsSortDir === "desc" ? comparison * -1 : comparison;
+        });
+        dealsTableBody.innerHTML = "";
+        dealsWithAccount.forEach((deal) => {
+            const row = dealsTableBody.insertRow();
+            row.innerHTML = `<td><input type="checkbox" class="commit-deal-checkbox" data-deal-id="${deal.id}" ${deal.is_committed ? "checked" : ""}></td><td class="deal-name-link" data-deal-id="${deal.id}">${deal.name}</td><td>${deal.term || ""}</td><td>${deal.account_name}</td><td>${deal.stage}</td><td>$${deal.mrc || 0}</td><td>${deal.close_month ? formatMonthYear(deal.close_month) : ""}</td><td>${deal.products || ""}</td><td><button class="btn-secondary edit-deal-btn" data-deal-id="${deal.id}">Edit</button></td>`;
+        });
+        document.querySelectorAll("#deals-table th.sortable").forEach((th) => {
+            th.classList.remove("asc", "desc");
+            if (th.dataset.sort === state.dealsSortBy) {
+                th.classList.add(state.dealsSortDir);
+            }
+        });
     };
 
     const renderDealsMetrics = () => {
-        // ... this function remains unchanged
+        if (!metricCurrentCommit) return;
+        const isManager = state.currentUser.user_metadata?.is_manager === true;
+        const isMyTeamView = state.dealsViewMode === 'all' && isManager;
+        if (metricCurrentCommitTitle && metricBestCaseTitle) {
+            metricCurrentCommitTitle.textContent = isMyTeamView ? "My Team's Current Commit" : "My Current Commit";
+            metricBestCaseTitle.textContent = isMyTeamView ? "My Team's Current Best Case" : "My Current Best Case";
+        }
+        let effectiveMonthlyQuota = 0;
+        if (isMyTeamView) {
+            effectiveMonthlyQuota = state.allUsersQuotas.reduce((sum, quota) => sum + (quota.monthly_quota || 0), 0);
+        } else {
+            effectiveMonthlyQuota = state.currentUserQuota;
+        }
+        if (commitTotalQuota && bestCaseTotalQuota) {
+            if (isMyTeamView) {
+                commitTotalQuota.textContent = formatCurrency(effectiveMonthlyQuota);
+                bestCaseTotalQuota.textContent = formatCurrency(effectiveMonthlyQuota);
+                commitTotalQuota.classList.remove('hidden');
+                bestCaseTotalQuota.classList.remove('hidden');
+            } else {
+                commitTotalQuota.classList.add('hidden');
+                bestCaseTotalQuota.classList.add('hidden');
+            }
+        }
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        let currentCommit = 0;
+        let bestCase = 0;
+        let totalFunnel = 0;
+        state.deals.forEach((deal) => {
+            const dealCloseDate = deal.close_month ? new Date(deal.close_month) : null;
+            const isCurrentMonth = dealCloseDate && dealCloseDate.getMonth() === currentMonth && dealCloseDate.getFullYear() === currentYear;
+            totalFunnel += deal.mrc || 0;
+            if (isCurrentMonth) {
+                bestCase += deal.mrc || 0;
+                if (deal.is_committed) {
+                    currentCommit += deal.mrc || 0;
+                }
+            }
+        });
+        metricCurrentCommit.textContent = formatCurrencyK(currentCommit);
+        metricBestCase.textContent = formatCurrencyK(bestCase);
+        metricFunnel.textContent = formatCurrencyK(totalFunnel);
+        const commitPercentage = effectiveMonthlyQuota > 0 ? ((currentCommit / effectiveMonthlyQuota) * 100).toFixed(1) : 0;
+        const bestCasePercentage = effectiveMonthlyQuota > 0 ? ((bestCase / effectiveMonthlyQuota) * 100).toFixed(1) : 0;
+        document.getElementById("commit-quota-percent").textContent = `${commitPercentage}%`;
+        document.getElementById("best-case-quota-percent").textContent = `${bestCasePercentage}%`;
     };
 
     // --- EVENT LISTENER SETUP ---
-    // ... all event listeners remain unchanged ...
-
+    function setupPageEventListeners() {
+        setupModalListeners();
+        themeToggleBtn.addEventListener("click", cycleTheme);
+        logoutBtn.addEventListener("click", async () => {
+            await supabase.auth.signOut();
+            window.location.href = "index.html";
+        });
+        dealsTable.querySelector("thead").addEventListener("click", (e) => {
+            const th = e.target.closest("th");
+            if (!th || !th.classList.contains("sortable")) return;
+            const sortKey = th.dataset.sort;
+            if (state.dealsSortBy === sortKey) {
+                state.dealsSortDir = state.dealsSortDir === "asc" ? "desc" : "asc";
+            } else {
+                state.dealsSortBy = sortKey;
+                state.dealsSortDir = "asc";
+            }
+            renderDealsPage();
+        });
+        document.addEventListener("change", async (e) => {
+            if (e.target.classList.contains("commit-deal-checkbox")) {
+                const dealId = Number(e.target.dataset.dealId);
+                const is_committed = e.target.checked;
+                await supabase.from("deals").update({ is_committed }).eq("id", dealId);
+                await loadAllData();
+            }
+        });
+        document.addEventListener("click", async (e) => {
+            if (e.target.classList.contains("edit-deal-btn")) {
+                const dealId = Number(e.target.dataset.dealId);
+                const deal = state.deals.find((d) => d.id === dealId);
+                if (!deal) return;
+                showModal(
+                    "Edit Deal",
+                    `<input type="hidden" id="modal-edit-deal-id" value="${deal.id}"><label>Deal Name</label><input type="text" id="modal-edit-deal-name" value="${deal.name || ""}" required><label>Stage</label><select id="modal-edit-deal-stage"><option>Discovery</option><option>Proposal</option><option>Negotiation</option><option>Closed Won</option><option>Closed Lost</option></select><label>Term</label><input type="text" id="modal-edit-deal-term" value="${deal.term || ""}"><label>Products</label><input type="text" id="modal-edit-deal-products" value="${deal.products || ""}"><label>Monthly Recurring Charge (MRC)</label><input type="number" id="modal-edit-deal-mrc" value="${deal.mrc || 0}" required><label>Estimated Close Month</label><input type="date" id="modal-edit-deal-close" value="${deal.close_month || ""}">`,
+                    async () => {
+                        const updatedDeal = { name: document.getElementById("modal-edit-deal-name").value, stage: document.getElementById("modal-edit-deal-stage").value, mrc: parseFloat(document.getElementById("modal-edit-deal-mrc").value), close_month: document.getElementById("modal-edit-deal-close").value, term: document.getElementById("modal-edit-deal-term").value, products: document.getElementById("modal-edit-deal-products").value };
+                        if (!updatedDeal.name || isNaN(updatedDeal.mrc)) { alert("Deal Name and MRC are required."); return; }
+                        await supabase.from("deals").update(updatedDeal).eq("id", deal.id);
+                        await loadAllData();
+                        hideModal();
+                    }
+                );
+                document.getElementById("modal-edit-deal-stage").value = deal.stage;
+            }
+        });
+        dealsTable.addEventListener("click", (e) => {
+            const targetLink = e.target.closest(".deal-name-link");
+            if (targetLink) {
+                const dealId = Number(targetLink.dataset.dealId);
+                const deal = state.deals.find((d) => d.id === dealId);
+                if (deal && deal.account_id) {
+                    window.location.href = `accounts.html?accountId=${deal.account_id}`;
+                }
+            }
+        });
+        if (viewMyDealsBtn) {
+            viewMyDealsBtn.addEventListener('click', async () => {
+                state.dealsViewMode = 'mine';
+                viewMyDealsBtn.classList.add('active');
+                viewAllDealsBtn.classList.remove('active');
+                await loadAllData();
+            });
+        }
+        if (viewAllDealsBtn) {
+            viewAllDealsBtn.addEventListener('click', async () => {
+                state.dealsViewMode = 'all';
+                viewAllDealsBtn.classList.add('active');
+                viewMyDealsBtn.classList.remove('active');
+                await loadAllData();
+            });
+        }
+    }
+    
     // --- INITIALIZATION ---
     function initializePage() {
         const savedTheme = localStorage.getItem('crm-theme') || 'dark';
@@ -181,10 +320,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         currentThemeIndex = savedThemeIndex !== -1 ? savedThemeIndex : 0;
         applyTheme(themes[currentThemeIndex]);
         updateActiveNavLink();
+
         supabase.auth.getSession().then(async ({ data: { session } }) => {
             if (session) {
                 state.currentUser = session.user;
-                // ... rest of initialization ...
+                if (dealsViewToggleDiv) {
+                    const isManager = state.currentUser.user_metadata?.is_manager === true;
+                    if (!isManager) {
+                        dealsViewToggleDiv.classList.add('hidden');
+                        state.dealsViewMode = 'mine';
+                    } else {
+                        dealsViewToggleDiv.classList.remove('hidden');
+                        viewMyDealsBtn.classList.add('active');
+                        viewAllDealsBtn.classList.remove('active');
+                    }
+                }
+                setupPageEventListeners();
                 await loadAllData();
             } else {
                 window.location.href = "index.html";
