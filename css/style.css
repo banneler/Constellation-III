@@ -20,7 +20,11 @@
   --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --logo-primary-color: var(--primary-blue);
   --logo-secondary-color: var(--text-light);
-  --meeting-purple: #8A2BE2; 
+  --meeting-purple: #8A2BE2;
+  /* NEW: Past Due Warning Colors */
+  --warning-bg: #4d441a;
+  --warning-text: #ffeb99;
+  --warning-hover-bg: #6b5f25;
 }
 
 /* Dark Theme */
@@ -45,6 +49,9 @@ body.theme-dark {
   --logo-primary-color: var(--primary-blue);
   --logo-secondary-color: var(--text-light);
   --meeting-purple: #8A2BE2;
+  --warning-bg: #4d441a;
+  --warning-text: #ffeb99;
+  --warning-hover-bg: #6b5f25;
 }
 
 /* Light Theme */
@@ -69,6 +76,9 @@ body.theme-light {
   --logo-primary-color: var(--primary-blue);
   --logo-secondary-color: var(--text-light);
   --meeting-purple: #6A0DAD;
+  --warning-bg: #fff8e1;
+  --warning-text: #856404;
+  --warning-hover-bg: #fff3cd;
 }
 
 /* Green Screen Theme */
@@ -93,6 +103,9 @@ body.theme-green {
   --logo-primary-color: var(--text-medium);
   --logo-secondary-color: var(--bg-dark);
   --meeting-purple: #9400D3;
+  --warning-bg: #1a331a;
+  --warning-text: #ffff00;
+  --warning-hover-bg: #2a522a;
 }
 
 /* --- GLOBAL STYLES --- */
@@ -210,9 +223,8 @@ body:not(.theme-green) .nav-button {
   transform: translateX(3px);
 }
 
-/* --- UPDATED ACTIVE BUTTON STYLES --- */
 .nav-button.active,
-.btn-secondary.active { /* This now correctly styles BOTH nav links and toggle buttons */
+.btn-secondary.active {
   color: var(--text-light);
   font-weight: bold;
   transform: translateY(-1px);
@@ -221,7 +233,6 @@ body:not(.theme-green) .nav-button {
   border: none;
 }
 
-/* Theme-specific overrides for the active button */
 body.theme-light .nav-button.active,
 body.theme-light .btn-secondary.active {
   background: linear-gradient(45deg, #007bff, #00c6ff);
@@ -233,12 +244,36 @@ body.theme-green .btn-secondary.active {
   border: 1px solid var(--text-light);
   box-shadow: 0 0 10px rgba(0, 255, 65, 0.6);
 }
-/* --- END OF UPDATED STYLES --- */
 
 .content-area {
   flex-grow: 1;
   padding: 20px;
   overflow-y: auto;
+}
+
+.content-view {
+  display: none;
+}
+.content-view.active-view {
+  display: block;
+}
+
+h2,
+h3,
+h4 {
+  margin-top: 0;
+  padding-bottom: 10px;
+  text-shadow: 1px 1px 2px var(--shadow-light);
+  transition: border-color 0.3s;
+}
+
+h2 {
+  border-bottom: 2px solid var(--primary-blue);
+}
+
+h4 {
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 10px;
 }
 
 /* --- DOWNLOADS SECTION --- */
@@ -270,7 +305,6 @@ body:not(.theme-green) .downloads-section {
 .downloads-links a {
     text-decoration: none;
 }
-
 
 /* --- UI COMPONENTS --- */
 .split-view {
@@ -704,7 +738,7 @@ body.theme-dark .modal-content {
   background: linear-gradient(160deg, var(--bg-medium), var(--bg-dark));
 }
 
-.modal-buttons {
+.modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
