@@ -39,7 +39,7 @@
                 <path transform="translate(254,623)" d="m0 0h9l8 4 5 6 2 7v6l-5 9-5 4-2 1h-14l-6-4-4-8v-13l6-8z" fill="#FEFEFE" />
                 <path transform="translate(960,370)" d="m0 0h13l6 3 5 6 1 3v10l-6 9-4 3-8 1-8-2-8-7-1-3v-11l4-8z" fill="#FEFEFE" />
             </svg>
-            <a href="dashboard.html" class="nav-button active">Dashboard</a>
+               <a href="dashboard.html" class="nav-button active">Dashboard</a>
             <a href="deals.html" class="nav-button">Deals</a>
             <a href="contacts.html" class="nav-button">Contacts</a>
             <a href="accounts.html" class="nav-button">Accounts</a>
@@ -49,111 +49,105 @@
                 Theme: <span id="theme-name">Dark</span>
             </button>
 
-            
             <button id="logout-btn" class="nav-button" style="background-color: #773030;">Logout</button>
         </nav>
 
         <main class="content-area">
-         <div id="dashboard" class="content-view active-view">
-        <h2>Dashboard: Due Sequence Steps</h2>
-        <div class="table-container">
-          <table id="dashboard-table">
-            <thead>
-              <tr>
-                <th>Due Date</th>
-                <th>Contact</th>
-                <th>Sequence</th>
-                <th>Step</th>
-                <th>Description</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-<h2 style="margin-top: 30px;">My Tasks</h2>
-        <button id="add-new-task-btn" class="btn-primary" style="margin-bottom: 15px;">Add New Task</button>
-        <div class="table-container">
-          <table id="my-tasks-table">
-            <thead>
-              <tr>
-                <th>Due Date</th>
-                <th>Description</th>
-                <th>Linked To</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+            <div id="dashboard" class="content-view active-view">
+                <h2>Dashboard: Due Sequence Steps</h2>
+                <div class="table-container">
+                    <table id="dashboard-table">
+                        <thead>
+                            <tr>
+                                <th>Due Date</th>
+                                <th>Contact</th>
+                                <th>Sequence</th>
+                                <th>Step</th>
+                                <th>Description</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <h2 style="margin-top: 30px;">My Tasks</h2>
+                <button id="add-new-task-btn" class="btn-primary" style="margin-bottom: 15px;">Add New Task</button>
+                <div class="table-container">
+                    <table id="my-tasks-table">
+                        <thead>
+                            <tr>
+                                <th>Due Date</th>
+                                <th>Description</th>
+                                <th>Linked To</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
 
-        <h2 style="margin-top: 30px;">All Upcoming Sequence Tasks</h2>
-        <h2 style="margin-top: 30px;">My Tasks</h2>
-        <div class="table-container">
-          <table id="my-tasks-table">
-            <thead>
-              <tr>
-                <th>Due Date</th>
-                <th>Description</th>
-                <th>Linked To</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+                <h2 style="margin-top: 30px;">All Upcoming Sequence Tasks</h2>
+                <h2 style="margin-top: 30px;">My Tasks</h2> <div class="table-container">
+                    <table id="my-tasks-table"> <thead>
+                            <tr>
+                                <th>Due Date</th>
+                                <th>Description</th>
+                                <th>Linked To</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
 
-        <h2 style="margin-top: 30px;">All Upcoming Sequence Tasks</h2>
-        <div class="table-container">
-          <table id="all-tasks-table">
-            <thead>
-              <tr>
-                <th>Next Task Due Date</th>
-                <th>Contact Name</th>
-                <th>Account Name</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+                <h2 style="margin-top: 30px;">All Upcoming Sequence Tasks</h2> <div class="table-container">
+                    <table id="all-tasks-table">
+                        <thead>
+                            <tr>
+                                <th>Next Task Due Date</th>
+                                <th>Contact Name</th>
+                                <th>Account Name</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
 
-        <h2 style="margin-top: 30px;">Recent Activities</h2>
-        <div class="table-container">
-          <table id="recent-activities-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Account</th>
-                <th>Contact</th>
-                <th>Activity</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+                <h2 style="margin-top: 30px;">Recent Activities</h2>
+                <div class="table-container">
+                    <table id="recent-activities-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Account</th>
+                                <th>Contact</th>
+                                <th>Activity</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
 
-        <h2 style="margin-top: 30px;">Deals Metrics</h2>
-        <div class="deals-metrics-container">
-          <div class="metric-card">
-            <div class="metric-title">My Current Commit</div>
-            <div class="metric-value" id="metric-current-commit"></div>
-            <span class="metric-quota-percent" id="commit-quota-percent"></span>
-          </div>
-          <div class="metric-card">
-            <div class="metric-title">My Current Best Case</div>
-            <div class="metric-value" id="metric-best-case"></div>
-            <span class="metric-quota-percent" id="best-case-quota-percent"></span>
-          </div>
-          <div class="metric-card">
-            <div class="metric-title">My Current Funnel</div>
-            <div class="metric-value" id="metric-funnel"></div>
-          </div>
-        </div>
-      </div>
+                <h2 style="margin-top: 30px;">Deals Metrics</h2>
+                <div class="deals-metrics-container">
+                    <div class="metric-card">
+                        <div class="metric-title">My Current Commit</div>
+                        <div class="metric-value" id="metric-current-commit"></div>
+                        <span class="metric-quota-percent" id="commit-quota-percent"></span>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">My Current Best Case</div>
+                        <div class="metric-value" id="metric-best-case"></div>
+                        <span class="metric-quota-percent" id="best-case-quota-percent"></span>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">My Current Funnel</div>
+                        <div class="metric-value" id="metric-funnel"></div>
+                    </div>
                 </div>
             </div>
-        </main>
+            </main>
     </div>
 
     <div id="modal-backdrop" class="modal-backdrop hidden">
