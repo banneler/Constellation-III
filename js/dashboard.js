@@ -21,7 +21,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const dashboardTable = document.querySelector("#dashboard-table tbody");
   const recentActivitiesTable = document.querySelector("#recent-activities-table tbody");
   const allTasksTable = document.querySelector("#all-tasks-table tbody");
-  const myTasksTable = document.querySelector("#my-tasks-table tbody"); // NEW: Selector for tasks table
+  const myTasksTable = document.querySelector("#my-tasks-table tbody");
+  const addNewTaskBtn = document.getElementById("add-new-task-btn"); // NEW: Selector for Add New Task button
   const themeToggleBtn = document.getElementById("theme-toggle-btn");
   const themeNameSpan = document.getElementById("theme-name");
   const metricCurrentCommit = document.getElementById("metric-current-commit");
@@ -56,8 +57,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!state.currentUser) return;
     console.log("loadAllData: Fetching all user data...");
 
-    // UPDATED: Add 'tasks' to the list of user-specific tables
-    const userSpecificTables = ["contacts", "accounts", "sequences", "activities", "contact_sequences", "deals", "tasks"];
+    const userSpecificTables = ["contacts", "accounts", "sequences", "activities", "contact_sequences", "deals", "tasks"]; // 'tasks' is here
     const publicTables = ["sequence_steps"];
 
     const userPromises = userSpecificTables.map((table) =>
@@ -100,12 +100,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // --- Render Functions ---
   function renderDashboard() {
-    if (!dashboardTable || !recentActivitiesTable || !allTasksTable || !myTasksTable) return; // UPDATED: Added myTasksTable check
+    if (!dashboardTable || !recentActivitiesTable || !allTasksTable || !myTasksTable) return;
     console.log("renderDashboard: Starting render process.");
     dashboardTable.innerHTML = "";
     recentActivitiesTable.innerHTML = "";
     allTasksTable.innerHTML = "";
-    myTasksTable.innerHTML = ""; // NEW: Clear tasks table
+    myTasksTable.innerHTML = "";
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -113,7 +113,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       .filter(
         (cs) => {
           const nextStepDate = new Date(cs.next_step_due_date);
-          nextStepDate.setHours(0, 0, 0, 0); // Normalize nextStepDate
+          nextStepDate.setHours(0, 0, 0, 0);
 
           const isDue = nextStepDate <= today;
           const isActive = cs.status === "Active";
@@ -348,6 +348,70 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.location.href = "index.html";
   });
 
+  // NEW: Add New Task Button Listener
+  if (addNewTaskBtn) { // Check if the element exists
+    addNewTaskBtn.addEventListener("click", async () => {
+        // Prepare options for linked entities
+        const contactsOptions = state.contacts.map(c => `<option value="c-${c.id}">${c.first_name} ${c.last_name}</option>`).join('');
+        const accountsOptions = state.accounts.map(a => `<option value="a-${a.id}">${a.name}</option>`).join('');
+        const dealsOptions = state.deals.map(d => `<option value="d-${d.id}">${d.name}</option>`).join('');
+
+        showModal(
+            'Create New Task',
+            `
+            <label>Description:</label><input type="text" id="modal-task-description" required><br>
+            <label>Due Date:</label><input type="date" id="modal-task-due-date"><br>
+            <label>Link To:</label>
+            <select id="modal-task-linked-entity">
+                <option value="">-- None --</option>
+                <optgroup label="Contacts">${contactsOptions}</optgroup>
+                <optgroup label="Accounts">${accountsOptions}</optgroup>
+                <optgroup label="Deals">${dealsOptions}</optgroup>
+            </select>
+            `,
+            async () => {
+                const description = document.getElementById('modal-task-description').value.trim();
+                const dueDate = document.getElementById('modal-task-due-date').value;
+                const linkedEntityValue = document.getElementById('modal-task-linked-entity').value;
+
+                if (!description) {
+                    alert('Task description is required.');
+                    return;
+                }
+
+                const newTask = {
+                    user_id: state.currentUser.id,
+                    description: description,
+                    due_date: dueDate || null,
+                    status: 'Pending'
+                };
+
+                // Determine linked entity type and set the correct ID
+                if (linkedEntityValue.startsWith('c-')) {
+                    newTask.contact_id = Number(linkedEntityValue.substring(2));
+                } else if (linkedEntityValue.startsWith('a-')) {
+                    newTask.account_id = Number(linkedEntityValue.substring(2));
+                } else if (linkedEntityValue.startsWith('d-')) {
+                    newTask.deal_id = Number(linkedEntityValue.substring(2));
+                }
+
+                console.log('Creating new task:', newTask);
+                const { error } = await supabase.from('tasks').insert([newTask]);
+
+                if (error) {
+                    console.error('Error creating task:', error.message);
+                    alert('Error: ' + error.message);
+                } else {
+                    console.log('Task created. Reloading data.');
+                    await loadAllData();
+                    hideModal();
+                }
+            }
+        );
+    });
+  }
+
+
   dashboardTable.addEventListener("click", async (e) => {
     const t = e.target.closest("button");
     if (!t) return;
@@ -429,6 +493,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // NEW: Event listeners for My Tasks section (Delegated)
   document.addEventListener('click', async (e) => {
     const targetButton = e.target;
+    // Handlers for "My Tasks" buttons
     if (targetButton.classList.contains('mark-task-complete-btn')) {
         const taskId = Number(targetButton.dataset.taskId);
         showModal('Confirm Completion', 'Mark this task as completed?', async () => {
@@ -466,9 +531,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         // Fetch contacts, accounts, and deals for dropdowns
-        const contactsOptions = state.contacts.map(c => `<option value="${c.id}" ${c.id === task.contact_id ? 'selected' : ''}>${c.first_name} ${c.last_name} (Contact)</option>`).join('');
-        const accountsOptions = state.accounts.map(a => `<option value="${a.id}" ${a.id === task.account_id ? 'selected' : ''}>${a.name} (Account)</option>`).join('');
-        const dealsOptions = state.deals.map(d => `<option value="${d.id}" ${d.id === task.deal_id ? 'selected' : ''}>${d.name} (Deal)</option>`).join('');
+        const contactsOptions = state.contacts.map(c => `<option value="c-${c.id}" ${c.id === task.contact_id ? 'selected' : ''}>${c.first_name} ${c.last_name} (Contact)</option>`).join('');
+        const accountsOptions = state.accounts.map(a => `<option value="a-${a.id}" ${a.id === task.account_id ? 'selected' : ''}>${a.name} (Account)</option>`).join('');
+        const dealsOptions = state.deals.map(d => `<option value="d-${d.id}" ${d.id === task.deal_id ? 'selected' : ''}>${d.name} (Deal)</option>`).join('');
 
         showModal(
             'Edit Task',
