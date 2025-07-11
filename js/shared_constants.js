@@ -3,7 +3,7 @@ export const SUPABASE_URL = "https://pjxcciepfypzrfmlfchj.supabase.co";
 export const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqeGNjaWVwZnlwenJmbWxmY2hqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMTU4NDQsImV4cCI6MjA2NzY5MTg0NH0.m_jyE0e4QFevI-mGJHYlGmA12lXf8XoMDoiljUav79c";
 
-export const MONTHLY_QUOTA = 5000;
+export const MONTHLY_QUOTA = 5000; // This constant is effectively overridden by user_quotas now, but kept for compatibility.
 export const themes = ['dark', 'light', 'green'];
 
 export const formatDate = (ds) => (ds ? new Date(ds).toLocaleString() : "");
@@ -23,6 +23,12 @@ export const formatCurrencyK = (value) => {
   const valInK = value / 1000;
   return `$${valInK.toFixed(1)}K`;
 };
+// NEW: Function to format currency as full value (e.g., $10,000)
+export const formatCurrency = (value) => {
+    if (value === null || isNaN(value)) return "$0";
+    return `$${value.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`; // Formats with commas, no decimals
+};
+
 export const addDays = (d, days) => {
   const r = new Date(d);
   r.setDate(r.getDate() + days);
