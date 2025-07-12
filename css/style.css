@@ -1,3 +1,4 @@
+
 /* --- GLOBAL SCALING --- */
 html {
     font-size: 87.5%; /* Reduces base font size from 16px to 14px (16 * 0.875) */
@@ -411,7 +412,7 @@ body:not(.theme-green) .downloads-section {
 .item-list-container {
     display: flex;
     flex-direction: column;
-    width: 15.625rem; /* ~250px */
+    width: 15.625rem;
     flex-shrink: 0;
 }
 
@@ -433,27 +434,7 @@ body:not(.theme-green) .item-list {
     border-bottom: 1px solid var(--border-color);
     cursor: pointer;
     transition: background-color 0.2s, transform 0.1s, border-color 0.3s;
-    display: flex; /* Make list item a flex container */
-    align-items: center; /* Vertically align content */
-    gap: 0.5rem; /* Space between name/account and the new indicator */
 }
-
-/* NEW: Style for the small indicator dot next to contact name in the list */
-.active-sequence-dot {
-    display: inline-block;
-    width: 0.6rem; /* Size of the dot */
-    height: 0.6rem; /* Size of the dot */
-    background-color: var(--primary-blue); /* The "little blue icon" color, or use a green */
-    border-radius: 50%;
-    margin-left: 0.5rem; /* Space between name and dot */
-    vertical-align: middle;
-    flex-shrink: 0;
-}
-/* If you want it green for green theme */
-body.theme-green .active-sequence-dot {
-    background-color: var(--text-light); /* Or a specific green from your theme */
-}
-
 
 .list-item:hover {
     background-color: var(--bg-light);
@@ -490,89 +471,15 @@ body:not(.theme-green) .details-panel {
     margin-top: 1.25rem;
 }
 
-/* --- PROGRESS RING STYLES --- */
 #contact-sequence-status {
     background-color: var(--bg-dark);
     padding: 0.9375rem;
     border: 1px solid var(--border-color);
     box-shadow: inset 0 0 5px var(--shadow-light);
     transition: background-color 0.3s, border-color 0.3s;
-    display: flex;
-    flex-direction: column; /* Stack items vertically */
-    align-items: center; /* Center items horizontally */
-    gap: 0.3125rem; /* Space between the ring, text, and button */
-    text-align: center; /* Center the text within the container */
 }
 body:not(.theme-green) #contact-sequence-status {
     border-radius: 5px;
-}
-
-.ring-chart-container {
-    position: relative;
-    width: 5rem; /* Large enough for a clear ring */
-    height: 5rem;
-    flex-shrink: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 0.625rem; /* Space below the ring */
-    border-radius: 50%;
-    /* No overflow: hidden here anymore, as fill is internal */
-}
-
-/* The fixed, grey track of the ring */
-.ring-chart-track {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background-color: var(--bg-medium); /* The background color of the unfilled ring */
-    /* This creates the inner "hole" of the ring */
-    box-shadow: inset 0 0 0 0.8rem var(--bg-dark); /* Adjust 0.8rem for desired ring thickness */
-    box-sizing: border-box;
-}
-
-/* The dynamic progress fill layer */
-.ring-chart-fill {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    /* This will be set by JS with conic-gradient for the progress */
-    background: transparent; /* Default to transparent */
-    /* The fill should appear *under* the box-shadow of the track to create the hollow effect */
-    z-index: 1; /* Ensure it's above the track for filling */
-}
-
-
-.ring-chart-text {
-    position: relative;
-    z-index: 3; /* Ensure text is on top of fill and track */
-    font-size: 1rem;
-    font-weight: bold;
-    color: var(--text-light);
-    white-space: nowrap; /* Prevent text from wrapping inside the ring */
-}
-
-.sequence-status-details {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex-grow: 1;
-    gap: 0.3125rem;
-    width: 100%;
-    justify-content: center;
-}
-
-#contact-sequence-info-text {
-    margin: 0;
-    font-size: 0.9rem;
-    color: var(--text-light);
-    text-align: center;
 }
 
 /* --- FORMS & BUTTONS --- */
@@ -808,13 +715,15 @@ th.sortable.desc span::after {
     justify-content: center;
     align-items: center;
     gap: 0.3125rem; /* Space between buttons */
+    /* Remove white-space: nowrap here if it was causing issues in the wrapper */
 }
 
 /* Set width/min-width for the actual table header/data cells */
 #my-tasks-table th:last-child,
 #my-tasks-table td:last-child {
-    width: auto;
+    width: auto; /* Let content dictate width */
     min-width: 250px; /* Increased min-width to comfortably fit 3 buttons + padding + gap */
+    /* Removed white-space: nowrap from here */
     padding-left: 0.5rem;
     padding-right: 0.5rem;
 }
@@ -824,6 +733,7 @@ th.sortable.desc span::after {
 #deals-table td:last-child {
     width: auto;
     min-width: 100px; /* Smaller min-width for 1 button */
+    /* Removed white-space: nowrap from here */
     padding-left: 0.5rem;
     padding-right: 0.5rem;
 }
@@ -832,7 +742,8 @@ th.sortable.desc span::after {
 #dashboard-table th:last-child,
 #dashboard-table td:last-child {
     width: auto;
-    min-width: 150px;
+    min-width: 150px; /* Adjust min-width based on expected buttons */
+    /* Removed white-space: nowrap from here */
     padding-left: 0.5rem;
     padding-right: 0.5rem;
 }
@@ -840,14 +751,71 @@ th.sortable.desc span::after {
 /* Override the generic table td:last-child if it's causing issues.
    The .button-group-wrapper handles flex now. */
 table td:last-child {
-    display: block; /* Important: Change to block to allow full width for .button-group-wrapper */
-    text-align: center; /* Fallback for older browsers / single button */
+    /* Revert to default table cell behavior or just text-align */
+    display: table-cell; /* Explicitly reset to default table cell display */
     vertical-align: middle; /* Align content vertically in the middle */
+    text-align: center; /* Center horizontally if no flex wrapper is present */
 }
 
-/* Ensure the wrapper within the TD can also be vertically centered relative to its parent TD */
-table td {
+
+/* Specific fixed widths for other columns (keep these as they are not action columns) */
+#deals-table th:nth-child(1),
+#deals-table td:nth-child(1) {
+    width: 5rem;
+    text-align: center;
+}
+#deals-table th:nth-child(3),
+#deals-table td:nth-child(3) {
+    width: 6.25rem;
+}
+#deals-table th:nth-child(4),
+#deals-table td:nth-child(4) {
+    width: 9.375rem;
+}
+#deals-table th:nth-child(8),
+#deals-table td:nth-child(8) {
+    width: 25%;
+}
+#account-deals-table th:nth-child(1),
+#account-deals-table td:nth-child(1) {
+    width: 3.75rem;
+    text-align: center;
+}
+
+
+table input[type="checkbox"] {
+    outline: none;
+    box-shadow: none;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-dark);
+    appearance: none;
+    width: 1.125rem;
+    height: 1.125rem;
+    cursor: pointer;
     vertical-align: middle;
+    position: relative;
+}
+body:not(.theme-green) table input[type="checkbox"] {
+    border-radius: 3px;
+}
+
+table input[type="checkbox"]:checked {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+}
+
+table input[type="checkbox"]:checked::after {
+    content: "✔";
+    font-size: 0.875rem;
+    color: var(--text-light);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+table input[type="checkbox"]:focus {
+    box-shadow: 0 0 0 2px var(--primary-blue);
 }
 
 /* --- MODAL --- */
