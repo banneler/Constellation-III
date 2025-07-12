@@ -1,6 +1,4 @@
 /* --- THEME DEFINITIONS --- */
-
-/* Default variables for fallback */
 :root {
   --bg-dark: #2e2e2e;
   --bg-medium: #3c3c3c;
@@ -13,6 +11,7 @@
   --border-color: #5a5a5a;
   --completed-color: #98ff98;
   --warning-yellow: #f1c40f;
+  --meeting-purple: #8A2BE2;
   --gradient-start: #3a3a3a;
   --gradient-end: #2a2a2a;
   --shadow-light: rgba(0, 0, 0, 0.3);
@@ -21,16 +20,9 @@
   --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --logo-primary-color: var(--primary-blue);
   --logo-secondary-color: var(--text-light);
-  --meeting-purple: #8A2BE2;
-
-  /* Chart Colors (Default/Dark Theme) */
-  --chart-primary-color: #1d4ed8; /* blue-700 */
-  --chart-secondary-color: #2563eb; /* blue-600 */
-  --chart-tertiary-color: #3b82f6; /* blue-500 */
-  --chart-quaternary-color: #60a5fa; /* blue-400 */
-  --chart-background-color: var(--bg-medium);
-  --chart-grid-color: var(--border-color);
-  --chart-text-color: var(--text-medium);
+  --warning-bg: #4d441a;
+  --warning-text: #ffeb99;
+  --warning-hover-bg: #6b5f25;
 }
 
 /* Dark Theme */
@@ -55,15 +47,9 @@ body.theme-dark {
   --logo-primary-color: var(--primary-blue);
   --logo-secondary-color: var(--text-light);
   --meeting-purple: #8A2BE2;
-
-  /* Chart Colors (Dark Theme) */
-  --chart-primary-color: #1d4ed8;
-  --chart-secondary-color: #2563eb;
-  --chart-tertiary-color: #3b82f6;
-  --chart-quaternary-color: #60a5fa;
-  --chart-background-color: var(--bg-medium);
-  --chart-grid-color: var(--border-color);
-  --chart-text-color: var(--text-medium);
+  --warning-bg: #4d441a;
+  --warning-text: #ffeb99;
+  --warning-hover-bg: #6b5f25;
 }
 
 /* Light Theme */
@@ -88,15 +74,9 @@ body.theme-light {
   --logo-primary-color: var(--primary-blue);
   --logo-secondary-color: var(--text-light);
   --meeting-purple: #6A0DAD;
-
-  /* Chart Colors (Light Theme) */
-  --chart-primary-color: #007bff;
-  --chart-secondary-color: #0056b3;
-  --chart-tertiary-color: #004085;
-  --chart-quaternary-color: #002752;
-  --chart-background-color: var(--bg-medium);
-  --chart-grid-color: var(--border-color);
-  --chart-text-color: var(--text-medium);
+  --warning-bg: #fff8e1;
+  --warning-text: #856404;
+  --warning-hover-bg: #fff3cd;
 }
 
 /* Green Screen Theme */
@@ -121,15 +101,9 @@ body.theme-green {
   --logo-primary-color: var(--text-medium);
   --logo-secondary-color: var(--bg-dark);
   --meeting-purple: #9400D3;
-
-  /* Chart Colors (Green Theme) */
-  --chart-primary-color: #00ff41; /* bright green */
-  --chart-secondary-color: #00cc33;
-  --chart-tertiary-color: #009922;
-  --chart-quaternary-color: #006611;
-  --chart-background-color: var(--bg-medium);
-  --chart-grid-color: var(--border-color);
-  --chart-text-color: var(--text-medium);
+  --warning-bg: #1a331a;
+  --warning-text: #ffff00;
+  --warning-hover-bg: #2a522a;
 }
 
 /* --- GLOBAL STYLES --- */
@@ -147,7 +121,6 @@ body.theme-green {
   animation: flicker 0.15s infinite;
 }
 
-/* Green theme specific scanlines */
 body.theme-green::before {
   content: " ";
   display: block;
@@ -163,20 +136,13 @@ body.theme-green::before {
 }
 
 @keyframes flicker {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.95;
-  }
-  100% {
-    opacity: 1;
-  }
+  0% { opacity: 1; }
+  50% { opacity: 0.95; }
+  100% { opacity: 1; }
 }
 
 /* --- SVG LOGO STYLES --- */
-.auth-logo,
-.nav-logo {
+.auth-logo, .nav-logo {
   width: 250px;
   height: auto;
   margin-bottom: 20px;
@@ -202,31 +168,18 @@ body.theme-green::before {
   transition: fill 0.3s;
 }
 
-/* --- FIX FOR DARK THEME LOGO --- */
 body.theme-dark .nav-logo path[fill="#010101"],
 body.theme-dark .auth-logo path[fill="#010101"] {
   fill: #FFFFFF !important;
 }
-/* --- END FIX FOR DARK THEME LOGO --- */
-
 
 /* --- MAIN LAYOUT --- */
 .crm-container {
   display: flex;
   height: 100vh;
-  background: linear-gradient(
-    135deg,
-    var(--gradient-start),
-    var(--gradient-end)
-  );
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
   transition: background 0.3s;
 }
-
-/* NEW: Style for when sidebar is open on mobile */
-.crm-container.sidebar-open .nav-sidebar {
-    transform: translateX(0); /* Slides the sidebar in */
-}
-
 
 .nav-sidebar {
   width: 200px;
@@ -236,14 +189,13 @@ body.theme-dark .auth-logo path[fill="#010101"] {
   flex-direction: column;
   flex-shrink: 0;
   box-shadow: 4px 0 10px var(--shadow-medium);
-  transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s ease-in-out;
-  overflow-y: auto; /* Allow sidebar content to scroll */
+  transition: background-color 0.3s, box-shadow 0.3s;
+  overflow: visible;
 }
 
 body:not(.theme-green) .nav-sidebar {
   border-radius: 0 10px 10px 0;
 }
-
 
 .nav-button {
   background: none;
@@ -255,11 +207,13 @@ body:not(.theme-green) .nav-sidebar {
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s, transform 0.1s;
+  text-decoration: none;
+  font-weight: 600; 
+  display: block;
 }
 body:not(.theme-green) .nav-button {
   border-radius: 5px;
 }
-
 
 .nav-button:hover {
   background-color: var(--bg-medium);
@@ -267,30 +221,27 @@ body:not(.theme-green) .nav-button {
   transform: translateX(3px);
 }
 
-/* General Active Button Styling (for nav buttons and new toggle buttons) */
 .nav-button.active,
 .btn-secondary.active {
-  background-color: var(--primary-blue);
   color: var(--text-light);
   font-weight: bold;
-  border: 1px solid var(--primary-blue);
-  box-shadow: 0 0 10px rgba(74, 144, 226, 0.6);
   transform: translateY(-1px);
-}
-
-body.theme-dark .nav-button.active {
   background: linear-gradient(45deg, #3a7bd5, #00d2ff);
+  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+  border: none;
 }
 
-/* FIX: Active nav button & active secondary button for Green Theme */
+body.theme-light .nav-button.active,
+body.theme-light .btn-secondary.active {
+  background: linear-gradient(45deg, #007bff, #00c6ff);
+}
+
 body.theme-green .nav-button.active,
 body.theme-green .btn-secondary.active {
-  background-color: transparent;
+  background: transparent;
   border: 1px solid var(--text-light);
-  color: var(--text-light);
   box-shadow: 0 0 10px rgba(0, 255, 65, 0.6);
 }
-
 
 .content-area {
   flex-grow: 1;
@@ -298,30 +249,144 @@ body.theme-green .btn-secondary.active {
   overflow-y: auto;
 }
 
-.content-view {
-  display: none;
+/* --- DEALS PAGE LAYOUT --- */
+.deals-header {
+    flex-shrink: 0;
 }
 
-.content-view.active-view {
-  display: block;
+/* --- CHART STYLES --- */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* SHRUNK */
+    gap: 20px;
+    margin-bottom: 20px;
 }
 
-h2,
-h3,
-h4 {
-  margin-top: 0;
-  padding-bottom: 10px;
-  text-shadow: 1px 1px 2px var(--shadow-light);
-  transition: border-color 0.3s;
+.chart-container {
+    padding: 15px;
+    background-color: var(--bg-medium);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 6px 15px var(--shadow-medium);
+    transition: background-color 0.3s, border-color 0.3s;
 }
 
-h2 {
-  border-bottom: 2px solid var(--primary-blue);
+body:not(.theme-green) .chart-container {
+  border-radius: 10px;
 }
 
-h4 {
-  border-bottom: 1px solid var(--border-color);
-  margin-bottom: 10px;
+.chart-container h4 {
+    text-align: center;
+    margin-bottom: 10px;
+    color: var(--text-medium);
+}
+.chart-wrapper {
+    position: relative;
+    height: 200px; /* SHRUNK */
+}
+.chart-wrapper canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.chart-empty-message {
+  width: 100%;
+  min-height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--text-medium);
+  font-style: italic;
+}
+
+/* --- DEALS METRICS (Resized) --- */
+.deals-view-toggle {
+    margin-bottom: 15px;
+}
+.deals-metrics-container {
+  display: flex;
+  justify-content: space-around;
+  gap: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.metric-card {
+  background-color: var(--bg-medium);
+  border: 1px solid var(--border-color);
+  padding: 10px 15px; /* SHRUNK */
+  text-align: center;
+  flex: 1;
+  min-width: 180px;
+  box-shadow: 0 4px 10px var(--shadow-medium);
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center content vertically */
+  position: relative;
+  min-height: 80px; /* Give a min-height */
+  transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+body:not(.theme-green) .metric-card {
+  border-radius: 10px;
+}
+
+body.theme-dark .metric-card {
+  background: linear-gradient(160deg, var(--bg-medium), var(--bg-dark));
+}
+
+.metric-title {
+  font-size: 13px; /* SHRUNK */
+  color: var(--text-medium);
+  margin-bottom: 5px;
+}
+
+.metric-value {
+  font-size: 24px; /* SHRUNK */
+  font-weight: bold;
+  color: var(--completed-color);
+  padding-bottom: 15px;
+}
+
+.metric-quota-percent {
+  font-size: 16px; /* SHRUNK */
+  color: var(--text-medium);
+  position: absolute;
+  bottom: 5px;
+  right: 8px;
+  white-space: nowrap;
+}
+
+
+/* --- DOWNLOADS SECTION --- */
+.downloads-section {
+  margin-top: 40px;
+  padding: 20px;
+  background-color: var(--bg-light);
+  border: 1px solid var(--border-color);
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+body:not(.theme-green) .downloads-section {
+    border-radius: 8px;
+}
+
+.downloads-section h4 {
+    margin-top: 0;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.downloads-links {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.downloads-links a {
+    text-decoration: none;
 }
 
 /* --- UI COMPONENTS --- */
@@ -404,50 +469,6 @@ body:not(.theme-green) #contact-sequence-status {
   border-radius: 5px;
 }
 
-/* --- SEQUENCE STATUS & RING CHART --- */
-#sequence-status-content {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.ring-chart-container {
-  position: relative;
-  width: 80px;
-  height: 80px;
-  flex-shrink: 0;
-}
-
-.ring-chart {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  -webkit-mask: radial-gradient(transparent 32px, black 32px);
-  mask: radial-gradient(transparent 32px, black 32px);
-  border: 1px solid var(--text-light);
-  box-sizing: border-box;
-  box-shadow: 0 2px 5px var(--shadow-light);
-  transition: background 0.3s;
-}
-
-.ring-chart-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 16px;
-  font-weight: bold;
-  color: var(--completed-color);
-}
-
-.sequence-status-details {
-  flex-grow: 1;
-}
-
-.sequence-status-details p {
-  margin: 0 0 10px 0;
-}
-
 /* --- FORMS & BUTTONS --- */
 .form-grid {
   display: grid;
@@ -525,7 +546,6 @@ body:not(.theme-green) .btn-secondary {
   border-radius: 5px;
 }
 
-
 .btn-primary {
   background-color: var(--primary-blue);
   box-shadow: 0 2px 5px var(--shadow-medium);
@@ -541,13 +561,11 @@ body:not(.theme-green) .btn-secondary {
   box-shadow: 0 2px 5px var(--shadow-medium);
 }
 
-/* FIX: Button legibility for Green Theme */
 body.theme-green .btn-primary {
   background-color: var(--secondary-gray);
   color: var(--text-light);
 }
 
-/* FIX: Danger button style for Green Theme */
 body.theme-green .btn-danger {
   background-color: transparent;
   border: 1px solid var(--danger-red);
@@ -635,6 +653,19 @@ body.theme-dark th {
 
 tbody tr:hover {
   background-color: var(--bg-light);
+}
+
+tbody tr.past-due td {
+    background-color: var(--warning-bg);
+    color: var(--warning-text);
+    font-weight: bold;
+}
+tbody tr.past-due:hover td {
+    background-color: var(--warning-hover-bg);
+}
+tbody tr.past-due a, tbody tr.past-due a:hover {
+    color: var(--warning-text);
+    text-decoration: underline;
 }
 
 th.sortable {
@@ -759,7 +790,7 @@ body.theme-dark .modal-content {
   background: linear-gradient(160deg, var(--bg-medium), var(--bg-dark));
 }
 
-.modal-buttons {
+.modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
@@ -805,7 +836,6 @@ body:not(.theme-green) #contact-activities-list li {
   vertical-align: middle;
 }
 
-/* New SVG icon styling (from earlier attempt) */
 .sequence-status-icon-svg {
   display: inline-flex;
   align-items: center;
@@ -823,7 +853,6 @@ body:not(.theme-green) #contact-activities-list li {
   color: var(--completed-color);
 }
 
-/* If you want different color for the dollar sign based on theme */
 body.theme-dark .sequence-status-icon-svg-inner {
     color: var(--completed-color);
 }
@@ -835,78 +864,6 @@ body.theme-light .sequence-status-icon-svg-inner {
 body.theme-green .sequence-status-icon-svg-inner {
     color: var(--text-light);
 }
-
-
-/* --- DEALS METRICS --- */
-.deals-metrics-container {
-  display: flex;
-  justify-content: space-around;
-  gap: 20px;
-  margin-bottom: 30px;
-  flex-wrap: wrap;
-}
-
-.metric-card {
-  background-color: var(--bg-medium);
-  border: 1px solid var(--border-color);
-  padding: 20px;
-  text-align: center;
-  flex: 1;
-  min-width: 200px;
-  box-shadow: 0 6px 15px var(--shadow-medium);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  position: relative;
-  transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
-}
-body:not(.theme-green) .metric-card {
-  border-radius: 10px;
-}
-
-body.theme-dark .metric-card {
-  background: linear-gradient(160deg, var(--bg-medium), var(--bg-dark));
-}
-
-.metric-title {
-  font-size: 16px;
-  color: var(--text-medium);
-  margin-bottom: 10px;
-}
-
-.metric-value {
-  font-size: 36px;
-  font-weight: bold;
-  color: var(--completed-color);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  position: relative;
-  padding-bottom: 20px;
-}
-
-.metric-quota-percent {
-  font-size: 24px;
-  color: var(--text-medium);
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-  white-space: nowrap;
-}
-
-/* NEW: Style for the roll-up quota display */
-.metric-total-quota-display {
-    font-size: 16px; /* Smaller than percentage, but clear */
-    color: var(--text-medium); /* Match text-medium color */
-    position: absolute;
-    bottom: 5px;
-    left: 5px; /* Position it opposite to the percentage */
-    white-space: nowrap;
-    opacity: 0.8; /* Slightly subtle */
-}
-
 
 .contact-name-link,
 .deal-name-link {
@@ -1012,156 +969,5 @@ body:not(.theme-green) .auth-box {
   }
   100% {
     transform: rotate(360deg);
-  }
-}
-/* --- RESPONSIVE DESIGN --- */
-/* For screens smaller than 768px (common breakpoint for tablets/mobile) */
-@media (max-width: 768px) {
-  /* Layout: Main Container & Sidebar */
-  .crm-container {
-    flex-direction: column; /* Stack sidebar and content vertically */
-    height: auto; /* Allow height to adjust to content */
-    min-height: 100vh; /* Ensure it still takes full viewport height if content is short */
-    padding-top: 60px; /* Space for fixed header bar */
-  }
-
-  .nav-sidebar {
-    width: 100%; /* Sidebar takes full width for header bar */
-    height: 60px; /* Fixed height for header bar */
-    padding: 10px 20px; /* Adjust padding */
-    flex-direction: row; /* Align items horizontally */
-    justify-content: space-between; /* Space out items */
-    align-items: center; /* Center items vertically */
-    box-shadow: 0 4px 10px var(--shadow-medium); /* Shadow at bottom */
-    position: fixed; /* Fix to top of viewport */
-    top: 0;
-    left: 0;
-    z-index: 10; /* Ensure it's above main content */
-    border-radius: 0; /* Remove border radius */
-    transform: translateX(0); /* Always visible as header */
-    transition: transform 0.3s ease-in-out; /* Add transition for sliding */
-  }
-  
-  /* Mobile Header Bar Elements Ordering & Sizing */
-  .nav-sidebar .nav-logo { /* The SVG logo becomes smaller in the mobile header */
-      display: block; /* Ensure it's visible */
-      width: 50px; /* INCREASED SIZE */
-      height: 50px; /* INCREASED SIZE */
-      margin: 0;
-      order: 1; /* Place logo first */
-  }
-
-  /* Hide the main navigation buttons by default in the mobile header bar */
-  .nav-sidebar a.nav-button:not(#theme-toggle-btn):not(#logout-btn):not(#hamburger-btn) { /* Explicitly exclude hamburger too */
-      display: none; /* Hide main nav links */
-  }
-  /* Ensure theme toggle and logout are correctly placed in the header */
-  .nav-sidebar #theme-toggle-btn,
-  .nav-sidebar #logout-btn {
-      margin: 0 5px; /* Adjust spacing */
-      padding: 8px 12px;
-      font-size: 14px;
-      order: 3; /* Place after hamburger */
-  }
-  .hamburger-menu {
-      display: flex; /* Show hamburger menu button on mobile */
-      order: 2; /* Position between logo and other buttons */
-  }
-
-  /* Main Content Area */
-  .content-area {
-    width: 100%; /* Main content takes full width */
-    padding: 15px; /* Adjust padding */
-    height: auto; /* Allow content to dictate height */
-  }
-
-  /* Split views (Contacts, Accounts, Sequences) - stack them vertically */
-  .split-view {
-    flex-direction: column; /* Stack list and details vertically */
-    gap: 15px; /* Reduce gap */
-    height: auto; /* Allow height to adjust */
-  }
-
-  .item-list-container {
-    width: 100%; /* List takes full width */
-  }
-
-  .details-panel {
-    width: 100%; /* Details panel takes full width */
-    padding: 15px; /* Adjust padding */
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr; /* Stack form fields vertically */
-    gap: 0; /* Remove gap */
-  }
-
-  /* Tables: Ensure horizontal scrolling */
-  .table-container {
-    overflow-x: auto; /* Keep horizontal scroll for tables */
-  }
-
-  /* Mobile Sidebar Styling when open (Overlay) */
-  .crm-container.sidebar-open .nav-sidebar {
-    width: 250px; /* Width of the sliding menu */
-    height: 100vh; /* Take full viewport height */
-    position: fixed; /* Fixed position for overlay */
-    top: 0;
-    left: 0;
-    flex-direction: column; /* Stack items vertically */
-    align-items: flex-start; /* Align nav items left */
-    padding: 20px; /* Reset padding for vertical layout */
-    z-index: 99; /* Below modal, above main content */
-    box-shadow: 4px 0 15px var(--shadow-strong);
-    transform: translateX(0); /* Ensure it slides in */
-  }
-  /* When sidebar is open, show all nav-buttons, including the main ones */
-  .crm-container.sidebar-open .nav-sidebar a.nav-button {
-      display: block !important; /* IMPORTANT: Override the 'display: none' from above */
-      width: 100%;
-      text-align: left;
-      margin: 5px 0;
-      padding: 12px 20px;
-  }
-  /* Re-hide the hamburger menu when the sidebar is open as a full overlay */
-  .crm-container.sidebar-open .hamburger-menu {
-      display: none;
-  }
-  /* Restore the logo visibility and sizing in the opened sidebar (if needed, e.g., at the top) */
-  .crm-container.sidebar-open .nav-sidebar .nav-logo {
-      display: block; /* Show logo inside the opened menu */
-      width: 180px; /* Restore original size for vertical layout */
-      height: auto; /* Adjust height automatically */
-      margin: 0 auto 20px auto; /* Center with bottom margin */
-  }
-  /* Hide Theme and Logout buttons when sidebar is open as an overlay */
-  .crm-container.sidebar-open .nav-sidebar #theme-toggle-btn,
-  .crm-container.sidebar-open .nav-sidebar #logout-btn {
-      display: none !important; /* Hide these when sidebar is full overlay */
-  }
-}
-
-/* For very small screens (e.g., phones in portrait) */
-@media (max-width: 480px) {
-  .nav-sidebar {
-      padding: 10px 10px; /* Less padding in header */
-  }
-  .nav-sidebar #theme-toggle-btn,
-  .nav-sidebar #logout-btn {
-      font-size: 12px; /* Smaller font for header buttons */
-      padding: 6px 10px;
-  }
-  .metric-card {
-    min-width: 150px; /* Adjust minimum width for metric cards */
-    padding: 15px;
-  }
-  .metric-value {
-    font-size: 28px; /* Smaller font for values */
-  }
-  .metric-quota-percent {
-    font-size: 18px; /* Smaller font for percentages */
-  }
-  .metric-total-quota-display {
-    font-size: 14px;
   }
 }
