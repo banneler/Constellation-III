@@ -1,4 +1,5 @@
 /* --- THEME DEFINITIONS --- */
+/* Default variables for fallback */
 :root {
   --bg-dark: #2e2e2e;
   --bg-medium: #3c3c3c;
@@ -263,24 +264,27 @@ body.theme-green .btn-secondary.active {
 .deals-table-container {
     flex-grow: 1;
     min-height: 0;
+    overflow-y: auto;
 }
 
 /* --- CHART STYLES --- */
 .charts-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     gap: 20px;
     margin-bottom: 20px;
 }
 
 .chart-container {
-    height: 250px;
     padding: 20px;
     background-color: var(--bg-medium);
     border: 1px solid var(--border-color);
     box-shadow: 0 6px 15px var(--shadow-medium);
     transition: background-color 0.3s, border-color 0.3s;
     position: relative;
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
 }
 
 body:not(.theme-green) .chart-container {
@@ -291,6 +295,7 @@ body:not(.theme-green) .chart-container {
     text-align: center;
     margin-bottom: 15px;
     color: var(--text-medium);
+    flex-shrink: 0;
 }
 .chart-empty-message {
   width: 100%;
@@ -305,6 +310,42 @@ body:not(.theme-green) .chart-container {
   left: 0;
 }
 
+/* This is the canvas element itself */
+.chart-container canvas {
+    flex-grow: 1;
+    min-height: 0;
+}
+
+
+/* --- DOWNLOADS SECTION --- */
+.downloads-section {
+  margin-top: 40px;
+  padding: 20px;
+  background-color: var(--bg-light);
+  border: 1px solid var(--border-color);
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+body:not(.theme-green) .downloads-section {
+    border-radius: 8px;
+}
+
+.downloads-section h4 {
+    margin-top: 0;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.downloads-links {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.downloads-links a {
+    text-decoration: none;
+}
 
 /* --- UI COMPONENTS --- */
 .split-view {
