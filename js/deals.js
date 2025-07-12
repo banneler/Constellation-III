@@ -112,14 +112,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // --- Chart Colors: Monochrome Green Palette ---
-  const monochromeGreenPalette = [
+    const monochromeGreenPalette = [
         '#003300', // Very Dark Green
         '#006600', // Darker Green
         '#009900', // Medium Green
         '#00cc00', // Brighter Green
         '#00ff41', // Your 'text-light' green
         '#33ff66'  // Lightest Green
-
     ];
 
     // --- Render Functions ---
@@ -153,7 +152,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 datasets: [{
                     label: 'Deals by Stage',
                     data: data,
-                    backgroundColor: monochromeGreenPalette, // Using the new monochrome green
+                    backgroundColor: monochromeGreenPalette,
                     borderColor: 'var(--bg-medium)',
                     borderWidth: 2
                 }]
@@ -163,12 +162,16 @@ document.addEventListener("DOMContentLoaded", async () => {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'right',
+                        position: 'left', // CHANGED: Legend position to left
                         labels: {
-                            color: 'var(--text-medium)'
+                            color: 'var(--text-medium)',
+                            font: { // ADDED: Legend font size
+                                size: 14, // You can adjust this value (e.g., 12, 16)
+                                weight: 'bold' // Makes the legend text bold
+                            }
                         }
                     },
-                    tooltip: { // Improved tooltip to show count and percentage
+                    tooltip: {
                         callbacks: {
                             label: function(context) {
                                 const label = context.label || '';
@@ -178,6 +181,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 return `${label}: ${value} deals (${percentage}%)`;
                             }
                         }
+                    }
+                },
+                layout: { // ADDED: Layout padding to shift donut to the left
+                    padding: {
+                        left: 20, // Adjust left padding as needed
+                        right: 20, // Adjust right padding to push the donut left
+                        top: 10,
+                        bottom: 10
                     }
                 }
             }
@@ -209,9 +220,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             else if (diffDays > 90) { funnel['90+ Days'] += deal.mrc || 0; }
         });
         const labels = Object.keys(funnel);
-        const data = Object.values(funnel); // Removed / 1000 here for full currency formatting on axis
+        const data = Object.values(funnel);
 
-        // Reverse the palette for the bar chart to have the darkest green for 0-30 days
         const reversedMonochromeGreenPalette = [...monochromeGreenPalette].reverse();
 
         if (state.dealsByTimeChart) {
@@ -223,7 +233,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 labels: labels,
                 datasets: [{
                     data: data,
-                    backgroundColor: reversedMonochromeGreenPalette.slice(0, labels.length), // Use reversed palette
+                    backgroundColor: reversedMonochromeGreenPalette.slice(0, labels.length),
                 }]
             },
             options: {
@@ -232,7 +242,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
-                    tooltip: { // Customize tooltip for Bar Chart
+                    tooltip: {
                         callbacks: {
                             label: function(context) {
                                 return `MRC: ${formatCurrency(context.parsed.x)}`;
@@ -245,7 +255,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         ticks: {
                             color: 'var(--text-medium)',
                             callback: function(value, index, values) {
-                                return formatCurrencyK(value); // Using formatCurrencyK for axis labels
+                                return formatCurrencyK(value);
                             }
                         },
                         grid: { color: 'var(--border-color)' }
@@ -253,8 +263,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                     y: {
                         ticks: { color: 'var(--text-medium)' },
                         grid: { display: false },
-                        barPercentage: 0.7,      // Adjusted bar thickness
-                        categoryPercentage: 0.6  // Adjusted space between bars
+                        barPercentage: 0.7,
+                        categoryPercentage: 0.6
                     }
                 }
             }
