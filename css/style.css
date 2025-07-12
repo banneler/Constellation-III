@@ -470,29 +470,32 @@ body:not(.theme-green) .details-panel {
     margin-top: 1.25rem;
 }
 
+/* --- PROGRESS RING STYLES --- */
 #contact-sequence-status {
     background-color: var(--bg-dark);
     padding: 0.9375rem;
     border: 1px solid var(--border-color);
     box-shadow: inset 0 0 5px var(--shadow-light);
     transition: background-color 0.3s, border-color 0.3s;
-    display: flex; /* Make it a flex container */
-    align-items: center; /* Vertically align items */
-    gap: 0.625rem; /* Space between the ring, text, and button */
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    align-items: center; /* Center items horizontally */
+    gap: 0.3125rem; /* Space between the ring and the text */
+    text-align: center; /* Center the text within the container */
 }
 body:not(.theme-green) #contact-sequence-status {
     border-radius: 5px;
 }
 
-/* --- PROGRESS RING STYLES --- */
 .ring-chart-container {
     position: relative;
-    width: 3rem; /* Small fixed size for the container of the ring */
-    height: 3rem;
+    width: 4.5rem; /* Increased size */
+    height: 4.5rem; /* Increased size */
     flex-shrink: 0; /* Prevent it from shrinking */
     display: flex;
     justify-content: center;
     align-items: center;
+    margin-bottom: 0.625rem; /* Space below the ring, to push text down */
 }
 
 .ring-chart {
@@ -503,15 +506,15 @@ body:not(.theme-green) #contact-sequence-status {
     height: 100%;
     border-radius: 50%;
     /* Default background, will be overridden by JS for progress */
-    background: var(--bg-dark); /* Color for the unfilled part of the ring */
-    border: 0.1875rem solid var(--border-color); /* The outer border of the ring */
+    background: var(--bg-medium); /* Color for the unfilled part of the ring */
+    border: 0.3125rem solid var(--border-color); /* The outer border of the ring */
     box-sizing: border-box; /* Include padding and border in the element's total width and height */
 }
 
 .ring-chart-text {
     position: relative; /* Bring text above the ring */
     z-index: 1; /* Ensure text is on top */
-    font-size: 0.75rem; /* Adjust text size inside the ring */
+    font-size: 0.875rem; /* Adjust text size inside the ring */
     font-weight: bold;
     color: var(--text-light);
 }
@@ -521,16 +524,17 @@ body:not(.theme-green) #contact-sequence-status {
     align-items: center;
     flex-grow: 1; /* Allow it to take available space */
     gap: 0.625rem;
+    width: 100%; /* Ensure full width for alignment */
+    justify-content: center; /* Center content */
+    flex-direction: column; /* Stack details vertically if needed */
 }
 
 #contact-sequence-info-text {
     margin: 0; /* Remove default paragraph margin */
     font-size: 0.875rem; /* Adjust text size */
     color: var(--text-light);
+    text-align: center;
 }
-
-/* If the sequence-status-icon-svg or icon-text was used for the graphical depiction,
-   it would likely be styled here too. Since it's not Chart.js, let's aim for CSS-only. */
 
 /* --- FORMS & BUTTONS --- */
 .form-grid {
@@ -771,7 +775,7 @@ th.sortable.desc span::after {
 #my-tasks-table th:last-child,
 #my-tasks-table td:last-child {
     width: auto;
-    min-width: 250px;
+    min-width: 250px; /* Increased min-width to comfortably fit 3 buttons + padding + gap */
     padding-left: 0.5rem;
     padding-right: 0.5rem;
 }
