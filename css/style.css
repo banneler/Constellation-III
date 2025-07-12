@@ -1063,3 +1063,11 @@ body.theme-green ::-webkit-scrollbar-thumb:hover {
 body.theme-green ::-webkit-scrollbar-track {
     background-color: var(--bg-medium);
 }
+/* TEMPORARY DEBUGGING RULE: REMOVE AFTER FIXING MODAL VISIBILITY */
+#modal-backdrop {
+    display: flex !important;
+    opacity: 1 !important;
+    z-index: 99999 !important; /* Ensure it's on top of everything */
+    background-color: rgba(0, 0, 0, 0.9) !important; /* Make it very opaque */
+}
+/* END TEMPORARY DEBUGGING RULE */
