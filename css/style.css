@@ -11,7 +11,6 @@
   --border-color: #5a5a5a;
   --completed-color: #98ff98;
   --warning-yellow: #f1c40f;
-  --meeting-purple: #8A2BE2;
   --gradient-start: #3a3a3a;
   --gradient-end: #2a2a2a;
   --shadow-light: rgba(0, 0, 0, 0.3);
@@ -20,6 +19,7 @@
   --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --logo-primary-color: var(--primary-blue);
   --logo-secondary-color: var(--text-light);
+  --meeting-purple: #8A2BE2;
   --warning-bg: #4d441a;
   --warning-text: #ffeb99;
   --warning-hover-bg: #6b5f25;
@@ -249,9 +249,13 @@ body.theme-green .btn-secondary.active {
   overflow-y: auto;
 }
 
+.content-view {
+  display: block; /* Let content flow naturally */
+}
+
 /* --- DEALS PAGE LAYOUT --- */
 .deals-header {
-    flex-shrink: 0;
+    flex-shrink: 0; /* Prevents this section from shrinking if in a flex container */
 }
 
 .deals-table-container {
@@ -272,8 +276,8 @@ body.theme-green .btn-secondary.active {
     border: 1px solid var(--border-color);
     box-shadow: 0 6px 15px var(--shadow-medium);
     transition: background-color 0.3s, border-color 0.3s;
-    position: relative;
-    /* Let the canvas define the height */
+    display: flex;
+    flex-direction: column;
 }
 
 body:not(.theme-green) .chart-container {
@@ -284,20 +288,32 @@ body:not(.theme-green) .chart-container {
     text-align: center;
     margin-bottom: 10px;
     color: var(--text-medium);
+    flex-shrink: 0;
 }
+
+.chart-wrapper {
+    position: relative;
+    height: 250px; /* Give the chart a stable height */
+}
+
+.chart-wrapper canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
 .chart-empty-message {
   width: 100%;
-  height: 100%;
-  min-height: 200px;
+  min-height: 220px;
   display: flex;
   justify-content: center;
   align-items: center;
   color: var(--text-medium);
   font-style: italic;
-  position: absolute;
-  top: 0;
-  left: 0;
 }
+
 
 /* --- DEALS METRICS (Resized) --- */
 .deals-view-toggle {
