@@ -112,13 +112,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // --- Chart Colors: Monochrome Green Palette ---
-    const monochromeGreenPalette = [
-        '#004d00', // Darker Green
-        '#006600', // Medium Green
-        '#008000', // Forest Green
-        '#009900', // Brighter Green
-        '#00b300', // Lime Green
-        '#00cc00'  // Lightest Green
+  const monochromeGreenPalette = [
+        '#003300', // Very Dark Green
+        '#006600', // Darker Green
+        '#009900', // Medium Green
+        '#00cc00', // Brighter Green
+        '#00ff41', // Your 'text-light' green
+        '#33ff66'  // Lightest Green
+
     ];
 
     // --- Render Functions ---
