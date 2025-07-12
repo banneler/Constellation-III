@@ -8,13 +8,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // --- Ensure modal listeners are set up FIRST ---
-    // This function from shared_constants.js wires up the modal's confirm/cancel buttons
-    // and prepares the modal for use. It needs to run before any showModal calls.
     setupModalListeners();
 
     // --- DOM Element Selectors (Auth specific) ---
     const authContainer = document.getElementById("auth-container");
-    // const authTitle = document.getElementById("auth-title"); // Removed from HTML, so we can remove this line.
     const authForm = document.getElementById("auth-form");
     const authError = document.getElementById("auth-error");
     const authEmailInput = document.getElementById("auth-email");
@@ -38,8 +35,6 @@ document.addEventListener("DOMContentLoaded", () => {
     authToggleLink.addEventListener("click", (e) => {
         e.preventDefault();
         console.log("Toggle link clicked.");
-        // If authTitle was used, uncomment next line. Since it's removed, keep commented.
-        // authTitle.textContent = isLoginMode ? "Login" : "Sign Up";
         authSubmitBtn.textContent = isLoginMode ? "Login" : "Sign Up";
         authToggleLink.textContent = isLoginMode ?
             "Need an account? Sign Up" :
@@ -94,6 +89,13 @@ document.addEventListener("DOMContentLoaded", () => {
         forgotPasswordLink.addEventListener('click', (e) => {
             e.preventDefault();
             console.log("Forgot Password link clicked.");
+
+            // --- CRUCIAL CHANGE HERE ---
+            // Construct the base path to your project, including the subdirectory
+            const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+            const redirectToUrl = window.location.origin + basePath + 'reset-password.html';
+            console.log("Redirecting to URL:", redirectToUrl); // For debugging
+
             showModal(
                 'Reset Password',
                 `<p>Enter your email address to receive a password reset link.</p>
@@ -105,16 +107,15 @@ document.addEventListener("DOMContentLoaded", () => {
                         return;
                     }
 
-                    // Temporarily disable/change text of the modal confirm button for feedback
                     const modalConfirmBtn = document.getElementById('modal-confirm-btn');
                     if (modalConfirmBtn) {
                         modalConfirmBtn.disabled = true;
                         modalConfirmBtn.textContent = 'Sending...';
                     }
 
-                    // Send password reset email
+                    // Send password reset email with the corrected redirectTo URL
                     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                        redirectTo: window.location.origin + '/reset-password.html'
+                        redirectTo: redirectToUrl // Use the dynamically constructed URL
                     });
 
                     if (error) {
@@ -125,7 +126,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                     hideModal();
 
-                    // Reset modal confirm button state
                     if (modalConfirmBtn) {
                         modalConfirmBtn.disabled = false;
                         modalConfirmBtn.textContent = 'Confirm';
@@ -135,9 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-
     // --- App Initialization (Auth Page) ---
-    // Make sure 'authTitle' is not referenced here if it's removed from HTML
     supabase.auth.onAuthStateChange(async (event, session) => {
         console.log("Auth event fired on auth page:", event);
         if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session) {
