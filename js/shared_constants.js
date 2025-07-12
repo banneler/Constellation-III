@@ -7,16 +7,6 @@ export const MONTHLY_QUOTA = 5000;
 export const themes = ['dark', 'light', 'green'];
 
 export const formatDate = (ds) => (ds ? new Date(ds).toLocaleString() : "");
-
-// NEW: Date formatter for date only
-export const formatSimpleDate = (ds) => {
-    if (!ds) return "";
-    const date = new Date(ds);
-    // Adjust for timezone to show the correct calendar date
-    const adjustedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
-    return adjustedDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
-};
-
 export const formatMonthYear = (ds) => {
   if (!ds) return "";
   const date = new Date(ds);
@@ -68,6 +58,7 @@ export const showModal = (title, bodyHtml, onConfirm) => {
   const modalTitle = document.getElementById("modal-title");
   const modalBody = document.getElementById("modal-body");
   const modalBackdrop = document.getElementById("modal-backdrop");
+
   if (!modalTitle || !modalBody || !modalBackdrop) {
       console.error("Modal elements not found!");
       return;
@@ -96,15 +87,67 @@ export const setupModalListeners = () => {
     }
 };
 
-export function updateActiveNavLink() {
-  const currentPath = window.location.pathname.split('/').pop();
-  if (!currentPath) return;
-  const navLinks = document.querySelectorAll('.nav-sidebar .nav-button');
-  navLinks.forEach(link => {
-    link.classList.remove('active');
-    const linkPath = link.getAttribute('href');
-    if (linkPath && linkPath.includes(currentPath)) {
-      link.classList.add('active');
-    }
-  });
-}
+// Hamburger menu toggle setup
+export const setupHamburgerMenuToggle = () => {
+  const hamburgerBtn = document.getElementById('hamburger-btn');
+  const crmContainer = document.querySelector('.crm-container');
+
+  if (hamburgerBtn && crmContainer) {
+    hamburgerBtn.addEventListener('click', () => {
+      crmContainer.classList.toggle('sidebar-open');
+      document.body.style.overflow = crmContainer.classList.contains('sidebar-open') ? 'hidden' : '';
+    });
+
+    const navButtons = crmContainer.querySelectorAll('.nav-sidebar .nav-button');
+    navButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            if (crmContainer.classList.contains('sidebar-open')) {
+                if (window.innerWidth <= 768) {
+                    crmContainer.classList.remove('sidebar-open');
+                    document.body.style.overflow = '';
+                }
+            }
+        });
+    });
+  }
+};
+
+// NEW: Function to update active navigation link
+export const updateActiveNavLink = () => {
+    const navButtons = document.querySelectorAll('.nav-sidebar .nav-button');
+    const currentPath = window.location.pathname.split('/').pop(); // Get filename
+    navButtons.forEach(button => {
+        const linkHref = button.getAttribute('href');
+        if (linkHref && linkHref.includes(currentPath)) {
+            // Special handling for 'command-center.html' if it's the new default dashboard
+            if (currentPath === 'command-center.html' && linkHref.includes('dashboard.html')) {
+                 // Do nothing, assume command-center is active and dashboard.html is old
+                 return;
+            }
+            if (currentPath === 'dashboard.html' && linkHref.includes('command-center.html')) {
+                // if current path is dashboard, and this button links to command-center, make it active
+                button.classList.add('active');
+            } else if (linkHref.includes(currentPath) && currentPath !== '') {
+                button.classList.add('active');
+            } else if (currentPath === '' && linkHref.includes('index.html')) { // For root index.html if applicable
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+        } else {
+            button.classList.remove('active');
+        }
+    });
+};
+
+// NEW: Chart colors - define placeholders
+// These will be assigned actual values in style.css
+export const CHART_COLORS = {
+    primary: 'var(--chart-primary-color)',
+    secondary: 'var(--chart-secondary-color)',
+    tertiary: 'var(--chart-tertiary-color)',
+    quaternary: 'var(--chart-quaternary-color)',
+    background: 'var(--chart-background-color)',
+    grid: 'var(--chart-grid-color)',
+    text: 'var(--chart-text-color)'
+};
