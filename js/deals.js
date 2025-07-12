@@ -162,11 +162,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'right', // CORRECTED: Legend position back to right
+                        position: 'right',
                         labels: {
                             color: 'var(--text-medium)',
                             font: {
-                                size: 14, // Keep this size for the legend text
+                                size: 14,
                                 weight: 'bold'
                             }
                         }
@@ -183,8 +183,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                         }
                     }
                 },
-                // REMOVED: The `layout.padding` object that was shrinking the donut
-                // The donut will now expand to fill the available space in .chart-wrapper
             }
         });
     }
@@ -282,7 +280,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         dealsTableBody.innerHTML = "";
         dealsWithAccount.forEach((deal) => {
             const row = dealsTableBody.insertRow();
-            row.innerHTML = `<td><input type="checkbox" class="commit-deal-checkbox" data-deal-id="${deal.id}" ${deal.is_committed ? "checked" : ""}></td><td class="deal-name-link" data-deal-id="${deal.id}">${deal.name}</td><td>${deal.term || ""}</td><td>${deal.account_name}</td><td>${deal.stage}</td><td>$${deal.mrc || 0}</td><td>${deal.close_month ? formatMonthYear(deal.close_month) : ""}</td><td>${deal.products || ""}</td><td><button class="btn-secondary edit-deal-btn" data-deal-id="${deal.id}">Edit</button></td>`;
+            // UPDATED: Wrap the Edit button in .button-group-wrapper
+            row.innerHTML = `<td><input type="checkbox" class="commit-deal-checkbox" data-deal-id="${deal.id}" ${deal.is_committed ? "checked" : ""}></td><td class="deal-name-link" data-deal-id="${deal.id}">${deal.name}</td><td>${deal.term || ""}</td><td>${deal.account_name}</td><td>${deal.stage}</td><td>$${deal.mrc || 0}</td><td>${deal.close_month ? formatMonthYear(deal.close_month) : ""}</td><td>${deal.products || ""}</td><td><div class="button-group-wrapper"><button class="btn-secondary edit-deal-btn" data-deal-id="${deal.id}">Edit</button></div></td>`;
         });
         document.querySelectorAll("#deals-table th.sortable").forEach((th) => {
             th.classList.remove("asc", "desc");
@@ -298,11 +297,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         const isMyTeamView = state.dealsViewMode === 'all' && isManager;
         if (metricCurrentCommitTitle && metricBestCaseTitle) {
             metricCurrentCommitTitle.textContent = isMyTeamView ? "My Team's Current Commit" : "My Current Commit";
-            metricBestCaseTitle.textContent = isMyTeamView ? "My Team's Current Best Case" : "My Team's Current Best Case";
+            metricBestCaseTitle.textContent = isMyTeamView ? "My Team's Current Best Case" : "My Current Best Case";
         }
         let effectiveMonthlyQuota = 0;
         if (isMyTeamView) {
             effectiveMonthlyQuota = state.allUsersQuotas.reduce((sum, quota) => sum + (quota.monthly_quota || 0), 0);
+        : 0);
         } else {
             effectiveMonthlyQuota = state.currentUserQuota;
         }
