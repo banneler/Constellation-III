@@ -705,29 +705,36 @@ th.sortable.desc span::after {
     border-top: 5px solid var(--text-light);
 }
 
-/* Specific styling for the Actions column in My Tasks table (and others) */
+/* --- FIX FOR ACTIONS COLUMN BUTTONS --- */
+/* Remove width:1% or fixed width from TH/TD directly */
 #my-tasks-table th:last-child,
 #my-tasks-table td:last-child,
 #deals-table th:last-child,
 #deals-table td:last-child,
 #dashboard-table th:last-child,
-#dashboard-table td:last-child
-{
-    width: 1%;
-    white-space: nowrap;
+#dashboard-table td:last-child {
+    /* Let content define width, potentially with a min-width to avoid extreme collapse */
+    width: auto; /* Allow the column to size based on content */
+    min-width: 120px; /* Minimum width to ensure buttons always fit. Adjust as needed */
+    white-space: nowrap; /* Keep content on a single line */
     padding-left: 0.5rem;
     padding-right: 0.5rem;
 }
 
-/* Center buttons within ALL action columns (last td in a row) */
+/* Apply flexbox to a wrapper *inside* the TD, not the TD directly,
+   or be very careful with it on the TD itself.
+   Given your current structure, applying it to the TD should work if width is managed. */
 table td:last-child {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 0.3125rem;
+    gap: 0.3125rem; /* Space between buttons */
 }
 
-/* Specific rules for Deals table last columns - removed fixed width, relying on the new generic rule */
+/* Ensure buttons use their standard sizes as defined by .btn-primary etc. */
+
+
+/* Specific rules for Deals table last columns - to be removed or adjusted to avoid conflict */
 #deals-table th:nth-child(1),
 #deals-table td:nth-child(1) {
     width: 5rem;
@@ -801,7 +808,7 @@ table input[type="checkbox"]:focus {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 9999; /* Increased z-index to ensure it's on top */
+    z-index: 9999;
 }
 
 .modal-content {
@@ -810,8 +817,8 @@ table input[type="checkbox"]:focus {
     width: 90%;
     max-width: 31.25rem;
     box-shadow: 0 8px 25px var(--shadow-strong);
-    position: relative; /* Ensure z-index works on its children if needed */
-    z-index: 10000; /* Higher than backdrop, though flexbox often handles this */
+    position: relative;
+    z-index: 10000;
 }
 body:not(.theme-green) .modal-content {
     border-radius: 10px;
@@ -935,7 +942,7 @@ body.theme-green .sequence-status-icon-svg-inner {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 2000; /* Ensure auth-container is below modal but above base content */
+    z-index: 2000;
     background: var(--bg-dark);
 }
 
@@ -946,10 +953,9 @@ body.theme-green .sequence-status-icon-svg-inner {
     width: 100%;
     max-width: 25rem;
     text-align: center;
-    /* Added display flex and column for better vertical spacing control */
     display: flex;
     flex-direction: column;
-    align-items: center; /* Center items horizontally within the column */
+    align-items: center;
 }
 body:not(.theme-green) .auth-box {
     border-radius: 10px;
@@ -982,7 +988,7 @@ body.theme-dark .auth-box {
 
 /* Tighter spacing for form elements within auth-form */
 #auth-form {
-    width: 100%; /* Ensure form takes full width for proper input sizing */
+    width: 100%;
 }
 #auth-form input {
     margin-top: 0.5rem;
@@ -1052,7 +1058,7 @@ body.theme-dark .auth-box {
 }
 
 /* For the track (the background where the thumb slides) */
-::-webkit-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
     background-color: var(--bg-dark);
     border-radius: 0.5rem;
 }
