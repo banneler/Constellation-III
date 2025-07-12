@@ -40,8 +40,8 @@
                 <path transform="translate(254,623)" d="m0 0h9l8 4 5 6 2 7v6l-5 9-5 4-2 1h-14l-6-4-4-8v-13l6-8z" fill="#FEFEFE" />
                 <path transform="translate(960,370)" d="m0 0h13l6 3 5 6 1 3v10l-6 9-4 3-8 1-8-2-8-7-1-3v-11l4-8z" fill="#FEFEFE" />
             </svg>
-           
-           <a href="command-center.html" class="nav-button">Command Center</a>
+
+            <a href="command-center.html" class="nav-button">Command Center</a>
             <a href="deals.html" class="nav-button">Deals</a>
             <a href="contacts.html" class="nav-button active">Contacts</a>
             <a href="accounts.html" class="nav-button">Accounts</a>
@@ -84,16 +84,19 @@
                         <div class="action-buttons">
                             <button id="log-activity-btn" class="btn-secondary">Log Activity</button>
                             <button id="assign-sequence-btn" class="btn-secondary">Assign Sequence</button>
-                            <button id="add-task-contact-btn" class="btn-primary">Add Task</button> </div>
+                            <button id="add-task-contact-btn" class="btn-primary">Add Task</button>
+                        </div>
                         <div id="contact-sequence-status" class="related-info">
                             <h4>Sequence Status</h4>
                             <div id="sequence-status-content" class="hidden">
                                 <div class="ring-chart-container">
-                                    <div id="ring-chart" class="ring-chart"></div>
+                                    <div class="ring-chart-track"></div>
+                                    <div id="ring-chart-fill" class="ring-chart-fill"></div>
                                     <div id="ring-chart-text" class="ring-chart-text"></div>
                                 </div>
                                 <div class="sequence-status-details">
-                                    <p id="contact-sequence-info-text"></p><button id="remove-from-sequence-btn" class="btn-danger">Remove from Sequence</button>
+                                    <p id="contact-sequence-info-text"></p>
+                                    <button id="remove-from-sequence-btn" class="btn-danger">Remove from Sequence</button>
                                 </div>
                             </div>
                             <p id="no-sequence-text">Not in a sequence.</p>
