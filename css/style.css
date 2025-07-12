@@ -433,7 +433,27 @@ body:not(.theme-green) .item-list {
     border-bottom: 1px solid var(--border-color);
     cursor: pointer;
     transition: background-color 0.2s, transform 0.1s, border-color 0.3s;
+    display: flex; /* Make list item a flex container */
+    align-items: center; /* Vertically align content */
+    gap: 0.5rem; /* Space between name/account and the new indicator */
 }
+
+/* NEW: Style for the small indicator dot next to contact name in the list */
+.active-sequence-dot {
+    display: inline-block;
+    width: 0.6rem; /* Size of the dot */
+    height: 0.6rem; /* Size of the dot */
+    background-color: var(--primary-blue); /* The "little blue icon" color, or use a green */
+    border-radius: 50%;
+    margin-left: 0.5rem; /* Space between name and dot */
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+/* If you want it green for green theme */
+body.theme-green .active-sequence-dot {
+    background-color: var(--text-light); /* Or a specific green from your theme */
+}
+
 
 .list-item:hover {
     background-color: var(--bg-light);
@@ -480,7 +500,7 @@ body:not(.theme-green) .details-panel {
     display: flex;
     flex-direction: column; /* Stack items vertically */
     align-items: center; /* Center items horizontally */
-    gap: 0.3125rem; /* Space between the ring and the text */
+    gap: 0.3125rem; /* Space between the ring, text, and button */
     text-align: center; /* Center the text within the container */
 }
 body:not(.theme-green) #contact-sequence-status {
@@ -489,49 +509,68 @@ body:not(.theme-green) #contact-sequence-status {
 
 .ring-chart-container {
     position: relative;
-    width: 4.5rem; /* Increased size */
-    height: 4.5rem; /* Increased size */
-    flex-shrink: 0; /* Prevent it from shrinking */
+    width: 5rem; /* Large enough for a clear ring */
+    height: 5rem;
+    flex-shrink: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 0.625rem; /* Space below the ring, to push text down */
+    margin-bottom: 0.625rem; /* Space below the ring */
+    border-radius: 50%;
+    /* No overflow: hidden here anymore, as fill is internal */
 }
 
-.ring-chart {
+/* The fixed, grey track of the ring */
+.ring-chart-track {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    /* Default background, will be overridden by JS for progress */
-    background: var(--bg-medium); /* Color for the unfilled part of the ring */
-    border: 0.3125rem solid var(--border-color); /* The outer border of the ring */
-    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    background-color: var(--bg-medium); /* The background color of the unfilled ring */
+    /* This creates the inner "hole" of the ring */
+    box-shadow: inset 0 0 0 0.8rem var(--bg-dark); /* Adjust 0.8rem for desired ring thickness */
+    box-sizing: border-box;
 }
 
+/* The dynamic progress fill layer */
+.ring-chart-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    /* This will be set by JS with conic-gradient for the progress */
+    background: transparent; /* Default to transparent */
+    /* The fill should appear *under* the box-shadow of the track to create the hollow effect */
+    z-index: 1; /* Ensure it's above the track for filling */
+}
+
+
 .ring-chart-text {
-    position: relative; /* Bring text above the ring */
-    z-index: 1; /* Ensure text is on top */
-    font-size: 0.875rem; /* Adjust text size inside the ring */
+    position: relative;
+    z-index: 3; /* Ensure text is on top of fill and track */
+    font-size: 1rem;
     font-weight: bold;
     color: var(--text-light);
+    white-space: nowrap; /* Prevent text from wrapping inside the ring */
 }
 
 .sequence-status-details {
-    display: flex; /* Use flex to align text and button */
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    flex-grow: 1; /* Allow it to take available space */
-    gap: 0.625rem;
-    width: 100%; /* Ensure full width for alignment */
-    justify-content: center; /* Center content */
-    flex-direction: column; /* Stack details vertically if needed */
+    flex-grow: 1;
+    gap: 0.3125rem;
+    width: 100%;
+    justify-content: center;
 }
 
 #contact-sequence-info-text {
-    margin: 0; /* Remove default paragraph margin */
-    font-size: 0.875rem; /* Adjust text size */
+    margin: 0;
+    font-size: 0.9rem;
     color: var(--text-light);
     text-align: center;
 }
