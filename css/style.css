@@ -150,7 +150,7 @@ body.theme-green::before {
 .auth-logo, .nav-logo {
     width: 250px;
     height: auto;
-    margin-bottom: 0.75rem; /* Reduced margin-bottom for a tighter look */
+    margin-bottom: 0.75rem;
     filter: drop-shadow(0 0 7px var(--primary-blue));
     transition: filter 0.3s;
 }
@@ -497,7 +497,7 @@ select,
 textarea {
     width: 100%;
     padding: 0.625rem;
-    margin: 0.3125rem 0 0.625rem 0; /* Reduced bottom margin from 0.9375rem (15px) to 0.625rem (10px) */
+    margin: 0.3125rem 0 0.625rem 0;
     background-color: var(--bg-dark);
     border: 1px solid var(--border-color);
     color: var(--text-light);
@@ -603,7 +603,7 @@ body.theme-green .btn-danger {
 
 .full-width {
     width: 100%;
-    margin-bottom: 0.625rem; /* Ensure consistency here too */
+    margin-bottom: 0.625rem;
 }
 
 .controls-bar,
@@ -801,7 +801,7 @@ table input[type="checkbox"]:focus {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 9999; /* Increased z-index to ensure it's on top */
 }
 
 .modal-content {
@@ -810,6 +810,8 @@ table input[type="checkbox"]:focus {
     width: 90%;
     max-width: 31.25rem;
     box-shadow: 0 8px 25px var(--shadow-strong);
+    position: relative; /* Ensure z-index works on its children if needed */
+    z-index: 10000; /* Higher than backdrop, though flexbox often handles this */
 }
 body:not(.theme-green) .modal-content {
     border-radius: 10px;
@@ -933,17 +935,21 @@ body.theme-green .sequence-status-icon-svg-inner {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 2000;
+    z-index: 2000; /* Ensure auth-container is below modal but above base content */
     background: var(--bg-dark);
 }
 
 .auth-box {
     background-color: var(--bg-medium);
-    padding: 1.25rem 1.875rem; /* 20px top/bottom, 30px left/right */
+    padding: 1.25rem 1.875rem;
     box-shadow: 0 8px 25px var(--shadow-strong);
     width: 100%;
     max-width: 25rem;
     text-align: center;
+    /* Added display flex and column for better vertical spacing control */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center items horizontally within the column */
 }
 body:not(.theme-green) .auth-box {
     border-radius: 10px;
@@ -955,9 +961,9 @@ body.theme-dark .auth-box {
 
 .auth-error {
     color: var(--danger-red);
-    min-height: 1rem; /* Reduced from 1.25rem (20px) to 1rem (16px) */
-    margin-top: 0.5rem; /* Added margin to push error down */
-    margin-bottom: 0.5rem; /* Added margin to push content down */
+    min-height: 1rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
 #auth-toggle-link,
@@ -975,14 +981,17 @@ body.theme-dark .auth-box {
 }
 
 /* Tighter spacing for form elements within auth-form */
+#auth-form {
+    width: 100%; /* Ensure form takes full width for proper input sizing */
+}
 #auth-form input {
-    margin-top: 0.5rem; /* Reduced from 0.625rem (10px) to 0.5rem (8px) */
-    margin-bottom: 0.5rem; /* Reduced from 0.625rem (10px) to 0.5rem (8px) */
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
 #auth-form button.btn-primary {
-    margin-top: 0.75rem; /* Add a bit more space above the main button */
-    margin-bottom: 0.75rem; /* Added margin below the button */
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
 }
 
 
@@ -1043,7 +1052,7 @@ body.theme-dark .auth-box {
 }
 
 /* For the track (the background where the thumb slides) */
-::-webkit-scrollbar-track {
+::-webkit-webkit-scrollbar-track {
     background-color: var(--bg-dark);
     border-radius: 0.5rem;
 }
@@ -1063,11 +1072,3 @@ body.theme-green ::-webkit-scrollbar-thumb:hover {
 body.theme-green ::-webkit-scrollbar-track {
     background-color: var(--bg-medium);
 }
-/* TEMPORARY DEBUGGING RULE: REMOVE AFTER FIXING MODAL VISIBILITY */
-#modal-backdrop {
-    display: flex !important;
-    opacity: 1 !important;
-    z-index: 99999 !important; /* Ensure it's on top of everything */
-    background-color: rgba(0, 0, 0, 0.9) !important; /* Make it very opaque */
-}
-/* END TEMPORARY DEBUGGING RULE */
