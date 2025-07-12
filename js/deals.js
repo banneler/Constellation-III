@@ -302,8 +302,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         let effectiveMonthlyQuota = 0;
         if (isMyTeamView) {
             effectiveMonthlyQuota = state.allUsersQuotas.reduce((sum, quota) => sum + (quota.monthly_quota || 0), 0);
-        : 0);
-        } else {
+        } else { // FIXED: Removed the extra ': 0)'
             effectiveMonthlyQuota = state.currentUserQuota;
         }
         if (commitTotalQuota && bestCaseTotalQuota) {
