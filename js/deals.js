@@ -79,10 +79,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     backgroundColor: chartColors, // Use new palette
                 }]
             },
-            options: { /* ... options are unchanged ... */ }
-        });
-    }
-
+         
   });
 
     const renderDealsPage = () => {
