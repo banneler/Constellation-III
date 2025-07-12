@@ -42,7 +42,7 @@
                 <path transform="translate(960,370)" d="m0 0h13l6 3 5 6 1 3v10l-6 9-4 3-8 1-8-2-8-7-1-3v-11l4-8z" fill="#FEFEFE" />
             </svg>
             
-            <a href="command-center.html" class="nav-button">Command Center</a>
+   <a href="command-center.html" class="nav-button">Command Center</a>
             <a href="deals.html" class="nav-button active">Deals</a>
             <a href="contacts.html" class="nav-button">Contacts</a>
             <a href="accounts.html" class="nav-button">Accounts</a>
@@ -58,56 +58,49 @@
         <main class="content-area">
             <div id="deals" class="content-view active-view">
                 <h2>Deals</h2>
-                         <div class="charts-grid">
-                    <div class="chart-container">
-                        <h4>Deals by Stage</h4>
-                        <canvas id="deals-by-stage-chart"></canvas>
-                        <div id="chart-empty-message" class="chart-empty-message hidden">
-                            No open deal data available to display.
+                
+                <div class="deals-header">
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <h4>Deals by Stage</h4>
+                            <canvas id="deals-by-stage-chart"></canvas>
+                            <div id="chart-empty-message" class="chart-empty-message hidden">
+                                No open deal data to display.
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <h4>30/60/90 Day Funnel</h4>
+                            <canvas id="deals-by-time-chart"></canvas>
+                            <div id="time-chart-empty-message" class="chart-empty-message hidden">
+                                No deals with future close dates.
+                            </div>
                         </div>
                     </div>
-                    <div class="chart-container">
-                        <h4>30/60/90 Day Funnel</h4>
-                        <canvas id="deals-by-time-chart"></canvas>
-                        <div id="time-chart-empty-message" class="chart-empty-message hidden">
-                            No deals with future close dates.
+                    <div class="deals-view-toggle">
+                        <button id="view-my-deals-btn" class="btn-secondary active">My Deals</button>
+                        <button id="view-all-deals-btn" class="btn-secondary">My Team's Deals</button> 
+                    </div>
+                    <div class="deals-metrics-container">
+                        <div class="metric-card">
+                            <div class="metric-title" id="metric-current-commit-title">My Current Commit</div> 
+                            <div class="metric-value" id="metric-current-commit"></div>
+                            <span class="metric-quota-percent" id="commit-quota-percent"></span>
+                            <span class="metric-total-quota-display hidden" id="commit-total-quota"></span> 
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-title" id="metric-best-case-title">My Current Best Case</div> 
+                            <div class="metric-value" id="metric-best-case"></div>
+                            <span class="metric-quota-percent" id="best-case-quota-percent"></span>
+                            <span class="metric-total-quota-display hidden" id="best-case-total-quota"></span> 
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-title">My Current Funnel</div>
+                            <div class="metric-value" id="metric-funnel"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="deals-view-toggle" style="margin-bottom: 20px;">
-                    </div>
-                <div class="deals-metrics-container">
-                    </div>
-                <div class="table-container">
-                    </div>
-            </div>
-        </main>
-    </div>
-    </div>
-                <div class="deals-view-toggle" style="margin-bottom: 20px;">
-                    <button id="view-my-deals-btn" class="btn-secondary active">My Deals</button>
-                    <button id="view-all-deals-btn" class="btn-secondary">My Team's Deals</button> 
-                </div>
-                <div class="deals-metrics-container">
-                    <div class="metric-card">
-                        <div class="metric-title" id="metric-current-commit-title">My Current Commit</div> 
-                        <div class="metric-value" id="metric-current-commit"></div>
-                        <span class="metric-quota-percent" id="commit-quota-percent"></span>
-                        <span class="metric-total-quota-display hidden" id="commit-total-quota"></span> 
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-title" id="metric-best-case-title">My Current Best Case</div> 
-                        <div class="metric-value" id="metric-best-case"></div>
-                        <span class="metric-quota-percent" id="best-case-quota-percent"></span>
-                        <span class="metric-total-quota-display hidden" id="best-case-total-quota"></span> 
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-title">My Current Funnel</div>
-                        <div class="metric-value" id="metric-funnel"></div>
-                    </div>
-                </div>
-                <div class="table-container">
+                <div class="table-container deals-table-container">
                     <table id="deals-table">
                         <thead>
                             <tr>
@@ -142,5 +135,4 @@
 
     <script type="module" src="js/deals.js"></script>
 </body>
-
 </html>
