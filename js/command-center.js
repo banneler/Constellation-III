@@ -1,15 +1,15 @@
 // js/command-center.js
-import { 
-    SUPABASE_URL, 
-    SUPABASE_ANON_KEY, 
+import {
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
     formatDate,
     formatSimpleDate,
     addDays,
-    themes, 
-    setupModalListeners, 
-    showModal, 
+    themes,
+    setupModalListeners,
+    showModal,
     hideModal,
-    updateActiveNavLink 
+    updateActiveNavLink
 } from './shared_constants.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -59,12 +59,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         today.setHours(0, 0, 0, 0);
         return today.toISOString();
     }
-    
+
     // --- Data Fetching ---
     async function loadAllData() {
         if (!state.currentUser) return;
         const userSpecificTables = ["contacts", "accounts", "sequences", "activities", "contact_sequences", "deals", "tasks"];
-        const publicTables = ["sequence_steps"]; 
+        const publicTables = ["sequence_steps"];
         const userPromises = userSpecificTables.map(table => supabase.from(table).select("*").eq("user_id", state.currentUser.id));
         const publicPromises = publicTables.map(table => supabase.from(table).select("*"));
         const allPromises = [...userPromises, ...publicPromises];
@@ -87,7 +87,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             renderDashboard();
         }
     }
-    
+
     // --- Core Logic ---
     async function completeStep(csId) {
         const cs = state.contact_sequences.find((c) => c.id === csId);
@@ -113,13 +113,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         dashboardTable.innerHTML = "";
         allTasksTable.innerHTML = "";
         recentActivitiesTable.innerHTML = "";
-        
+
         const todayUTCString = new Date().toISOString().slice(0, 10);
 
         // Render My Tasks
         state.tasks.filter(task => task.status === 'Pending').sort((a, b) => new Date(a.due_date) - new Date(b.due_date)).forEach(task => {
             const row = myTasksTable.insertRow();
-            
+
             if (task.due_date) {
                 const dueDateString = task.due_date.slice(0, 10);
                 if (dueDateString < todayUTCString) {
@@ -135,11 +135,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const account = state.accounts.find(a => a.id === task.account_id);
                 if(account) linkedEntity = `<a href="accounts.html?accountId=${account.id}" class="contact-name-link">${account.name}</a> (Account)`;
             }
+            // UPDATED: Wrap buttons in .button-group-wrapper for My Tasks
             row.innerHTML = `<td>${formatSimpleDate(task.due_date)}</td><td>${task.description}</td><td>${linkedEntity}</td>
                 <td>
-                    <button class="btn-primary mark-task-complete-btn" data-task-id="${task.id}">Complete</button>
-                    <button class="btn-secondary edit-task-btn" data-task-id="${task.id}">Edit</button>
-                    <button class="btn-danger delete-task-btn" data-task-id="${task.id}">Delete</button>
+                    <div class="button-group-wrapper">
+                        <button class="btn-primary mark-task-complete-btn" data-task-id="${task.id}">Complete</button>
+                        <button class="btn-secondary edit-task-btn" data-task-id="${task.id}">Edit</button>
+                        <button class="btn-danger delete-task-btn" data-task-id="${task.id}">Delete</button>
+                    </div>
                 </td>`;
         });
 
@@ -152,7 +155,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             .sort((a, b) => new Date(a.next_step_due_date) - new Date(b.next_step_due_date))
             .forEach(cs => {
                 const row = dashboardTable.insertRow();
-                
+
                 const dueDateString = cs.next_step_due_date.slice(0, 10);
                 if (dueDateString < todayUTCString) {
                     row.classList.add('past-due');
@@ -168,7 +171,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (step.type.toLowerCase() === "email" && contact.email) {
                     btnHtml = `<button class="btn-primary send-email-btn" data-cs-id="${cs.id}" data-contact-id="${contact.id}" data-subject="${encodeURIComponent(step.subject)}" data-message="${encodeURIComponent(step.message)}">Send Email</button>`;
                 }
-                row.innerHTML = `<td>${formatSimpleDate(cs.next_step_due_date)}</td><td>${contact.first_name} ${contact.last_name}</td><td>${sequence.name}</td><td>${step.step_number}: ${step.type}</td><td>${desc}</td><td>${btnHtml}</td>`;
+                // UPDATED: Wrap btnHtml in .button-group-wrapper for Sequence Steps Due
+                row.innerHTML = `<td>${formatSimpleDate(cs.next_step_due_date)}</td><td>${contact.first_name} ${contact.last_name}</td><td>${sequence.name}</td><td>${step.step_number}: ${step.type}</td><td>${desc}</td><td><div class="button-group-wrapper">${btnHtml}</div></td>`;
             });
 
         // Render Upcoming Sequence Tasks
@@ -183,10 +187,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const contact = state.contacts.find(c => c.id === cs.contact_id);
                 if (!contact) return;
                 const account = contact.account_id ? state.accounts.find(a => a.id === contact.account_id) : null;
-                row.innerHTML = `<td>${formatSimpleDate(cs.next_step_due_date)}</td><td>${contact.first_name} ${contact.last_name}</td><td>${account ? account.name : "N/A"}</td><td><button class="btn-secondary revisit-step-btn" data-cs-id="${cs.id}">Revisit Last Step</button></td>`;
+                // UPDATED: Wrap button in .button-group-wrapper for Upcoming Sequence Tasks
+                row.innerHTML = `<td>${formatSimpleDate(cs.next_step_due_date)}</td><td>${contact.first_name} ${contact.last_name}</td><td>${account ? account.name : "N/A"}</td><td><div class="button-group-wrapper"><button class="btn-secondary revisit-step-btn" data-cs-id="${cs.id}">Revisit Last Step</button></div></td>`;
             });
 
-        // Render Recent Activities
+        // Render Recent Activities (No buttons in last column, so no change needed here)
         state.activities
             .sort((a, b) => new Date(b.date) - new Date(a.date))
             .slice(0, 20)
@@ -224,10 +229,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const linkedEntityValue = document.getElementById('modal-task-linked-entity').value;
                 if (!description) { alert('Description is required.'); return; }
                 const taskData = { description, due_date: dueDate || null, user_id: state.currentUser.id, status: 'Pending' };
-                if (linkedEntityValue.startsWith('c-')) { taskData.contact_id = Number(linkedEntityValue.substring(2)); } 
+                if (linkedEntityValue.startsWith('c-')) { taskData.contact_id = Number(linkedEntityValue.substring(2)); }
                 else if (linkedEntityValue.startsWith('a-')) { taskData.account_id = Number(linkedEntityValue.substring(2)); }
                 const { error } = await supabase.from('tasks').insert(taskData);
-                if (error) { alert('Error adding task: ' + error.message); } 
+                if (error) { alert('Error adding task: ' + error.message); }
                 else { await loadAllData(); hideModal(); }
             });
         });
@@ -267,14 +272,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                     const linkedEntityValue = document.getElementById('modal-task-linked-entity').value;
                     if (!newDescription) { alert('Task description is required.'); return; }
                     const updateData = { description: newDescription, due_date: newDueDate || null, contact_id: null, account_id: null };
-                    if (linkedEntityValue.startsWith('c-')) { updateData.contact_id = Number(linkedEntityValue.substring(2)); } 
+                    if (linkedEntityValue.startsWith('c-')) { updateData.contact_id = Number(linkedEntityValue.substring(2)); }
                     else if (linkedEntityValue.startsWith('a-')) { updateData.account_id = Number(linkedEntityValue.substring(2)); }
                     await supabase.from('tasks').update(updateData).eq('id', taskId);
                     await loadAllData(); hideModal();
                 });
             } else if (button.matches('.complete-step-btn')) {
-                 const csId = Number(button.dataset.id);
-                 completeStep(csId);
+                const csId = Number(button.dataset.id);
+                completeStep(csId);
             } else if (button.matches('.send-email-btn')) {
                 const csId = Number(button.dataset.csId);
                 const contactId = Number(button.dataset.contactId);
