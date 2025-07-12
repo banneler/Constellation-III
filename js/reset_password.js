@@ -1,4 +1,5 @@
 // js/reset_password.js
+// No need to import modal functions here, as this page directly contains the form.
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './shared_constants.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -15,26 +16,44 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     console.log("Reset page elements:", { resetTitle, resetError, resetPasswordForm, newPasswordInput, confirmPasswordInput, setPasswordBtn });
 
-    // --- Initial Check and Auth State Handling ---
-    // Supabase will automatically process the URL hash (#access_token=...) when this page loads.
-    // We listen to auth state changes to know if a session has been established from the token.
+    // --- Auth State Handling for Password Reset Flow ---
+    // This part is crucial. When a user clicks a password reset link,
+    // Supabase automatically exchanges the token in the URL for a session
+    // This 'SIGNED_IN' event indicates the user is now authenticated
+    // and can proceed to update their password.
     supabase.auth.onAuthStateChange(async (event, session) => {
         console.log('Auth event on reset_password.js:', event);
         if (event === 'SIGNED_IN' && session) {
-            // User is signed in because the reset token was successfully exchanged for a session.
-            // Now, they can set the new password.
-            console.log("User session detected, ready to set new password.");
+            // The token from the URL has been successfully exchanged.
+            // User can now set their new password.
+            console.log("User session detected via reset token. Ready to set new password.");
             resetTitle.textContent = "Set New Password";
-            // The form is already visible, just ensure feedback area is clear
-            resetError.textContent = '';
+            resetError.textContent = ''; // Clear any initial error messages
+
+            // Ensure the form is visible (it should be by default now with direct HTML)
+            if (resetPasswordForm) {
+                resetPasswordForm.classList.remove('hidden'); // In case it was hidden by default or a previous error
+                newPasswordInput.focus(); // Set focus to the first input field
+            }
+
         } else if (event === 'SIGNED_OUT') {
-            // This might happen if the token is invalid or expired.
-            console.warn("User signed out or no session detected on reset password page.");
+            // This event might fire if the URL token is invalid, expired, or already used.
+            console.warn("User signed out or no session detected on reset password page. Token likely invalid/expired.");
             resetTitle.textContent = "Invalid or Expired Link";
             resetError.textContent = "Your password reset link is invalid or has expired. Please request a new one.";
-            resetPasswordForm.classList.add('hidden'); // Hide the form if link is bad
+            if (resetPasswordForm) {
+                resetPasswordForm.classList.add('hidden'); // Hide the form if the link is bad
+            }
+            // Also hide the "Back to Login" link to avoid confusion
+            const backToLoginLink = document.querySelector('a[href="index.html"]');
+            if (backToLoginLink) {
+                backToLoginLink.classList.add('hidden'); // Optionally hide if link is bad
+            }
         }
+        // For other events (e.g., INITIAL_SESSION if no token, or user is already logged in for some reason)
+        // the form will remain visible based on the HTML.
     });
+
 
     // --- Handle New Password Form Submission ---
     if (resetPasswordForm) {
@@ -45,6 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const newPassword = newPasswordInput.value;
             const confirmPassword = confirmPasswordInput.value;
 
+            // Basic client-side validation
             if (newPassword.length < 6) {
                 resetError.textContent = "Password must be at least 6 characters long.";
                 return;
@@ -58,6 +78,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             setPasswordBtn.textContent = 'Setting...';
 
             // Update the user's password in Supabase
+            // This works because the onAuthStateChange event (triggered by the URL token)
+            // has already established a temporary authenticated session.
             const { error } = await supabase.auth.updateUser({ password: newPassword });
 
             if (error) {
@@ -73,15 +95,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             setPasswordBtn.textContent = 'Set Password';
         });
     } else {
-        console.error("Reset password form not found!");
+        console.error("Reset password form not found in DOM!");
     }
 
-    // Optional: Immediately check session on load to handle direct access with token
-    // (onAuthStateChange should catch this, but this can provide faster initial state)
+    // Initial check for session (important if user refreshes page after token exchange)
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-        // If no session on initial load, it means the token hasn't been exchanged yet
-        // or the link is bad. The onAuthStateChange will eventually resolve this.
-        console.log("No initial session on reset password page. Waiting for auth state change.");
+    if (session) {
+        // If a session already exists (e.g., from a previously valid reset token on page load),
+        // we can assume the user is ready to set password.
+        resetTitle.textContent = "Set New Password";
+        newPasswordInput.focus();
+    } else {
+        // If no session immediately, the onAuthStateChange listener will eventually
+        // catch the token exchange or indicate an invalid link.
+        resetTitle.textContent = "Waiting for Link Validation..."; // Initial message
+        // Optionally hide form until session confirmed (can be made visible by onAuthStateChange)
+        // resetPasswordForm.classList.add('hidden');
     }
 });
