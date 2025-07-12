@@ -705,62 +705,82 @@ th.sortable.desc span::after {
     border-top: 5px solid var(--text-light);
 }
 
-/* --- FIX FOR ACTIONS COLUMN BUTTONS --- */
-/* Remove width:1% or fixed width from TH/TD directly */
-#my-tasks-table th:last-child,
-#my-tasks-table td:last-child,
-#deals-table th:last-child,
-#deals-table td:last-child,
-#dashboard-table th:last-child,
-#dashboard-table td:last-child {
-    /* Let content define width, potentially with a min-width to avoid extreme collapse */
-    width: auto; /* Allow the column to size based on content */
-    min-width: 120px; /* Minimum width to ensure buttons always fit. Adjust as needed */
-    white-space: nowrap; /* Keep content on a single line */
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-}
+/* --- FIX FOR ACTIONS COLUMN BUTTONS (Revised) --- */
+/* Target the TH/TD for width, and use a wrapper DIV inside TD for flexbox */
 
-/* Apply flexbox to a wrapper *inside* the TD, not the TD directly,
-   or be very careful with it on the TD itself.
-   Given your current structure, applying it to the TD should work if width is managed. */
-table td:last-child {
+/* This will be the wrapper inside the <td> for buttons, handling their layout */
+.button-group-wrapper {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 0.3125rem; /* Space between buttons */
+    /* Remove white-space: nowrap here if it was causing issues in the wrapper */
 }
 
-/* Ensure buttons use their standard sizes as defined by .btn-primary etc. */
+/* Set width/min-width for the actual table header/data cells */
+#my-tasks-table th:last-child,
+#my-tasks-table td:last-child {
+    width: auto; /* Let content dictate width */
+    min-width: 250px; /* Increased min-width to comfortably fit 3 buttons + padding + gap */
+    /* Removed white-space: nowrap from here */
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+/* For Deals table, which has fewer buttons in the actions column */
+#deals-table th:last-child,
+#deals-table td:last-child {
+    width: auto;
+    min-width: 100px; /* Smaller min-width for 1 button */
+    /* Removed white-space: nowrap from here */
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+/* For Sequence Steps Due (dashboard-table) which also has varying buttons */
+#dashboard-table th:last-child,
+#dashboard-table td:last-child {
+    width: auto;
+    min-width: 150px; /* Adjust min-width based on expected buttons */
+    /* Removed white-space: nowrap from here */
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+/* Override the generic table td:last-child if it's causing issues.
+   The .button-group-wrapper handles flex now. */
+table td:last-child {
+    /* Revert to default table cell behavior or just text-align */
+    display: table-cell; /* Explicitly reset to default table cell display */
+    vertical-align: middle; /* Align content vertically in the middle */
+    text-align: center; /* Center horizontally if no flex wrapper is present */
+}
 
 
-/* Specific rules for Deals table last columns - to be removed or adjusted to avoid conflict */
+/* Specific fixed widths for other columns (keep these as they are not action columns) */
 #deals-table th:nth-child(1),
 #deals-table td:nth-child(1) {
     width: 5rem;
     text-align: center;
 }
-
 #deals-table th:nth-child(3),
 #deals-table td:nth-child(3) {
     width: 6.25rem;
 }
-
 #deals-table th:nth-child(4),
 #deals-table td:nth-child(4) {
     width: 9.375rem;
 }
-
 #deals-table th:nth-child(8),
 #deals-table td:nth-child(8) {
     width: 25%;
 }
-
 #account-deals-table th:nth-child(1),
 #account-deals-table td:nth-child(1) {
     width: 3.75rem;
     text-align: center;
 }
+
 
 table input[type="checkbox"] {
     outline: none;
