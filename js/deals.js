@@ -162,12 +162,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'left', // CHANGED: Legend position to left
+                        position: 'right', // CORRECTED: Legend position back to right
                         labels: {
                             color: 'var(--text-medium)',
-                            font: { // ADDED: Legend font size
-                                size: 14, // You can adjust this value (e.g., 12, 16)
-                                weight: 'bold' // Makes the legend text bold
+                            font: {
+                                size: 14, // Keep this size for the legend text
+                                weight: 'bold'
                             }
                         }
                     },
@@ -183,14 +183,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                         }
                     }
                 },
-                layout: { // ADDED: Layout padding to shift donut to the left
-                    padding: {
-                        left: 20, // Adjust left padding as needed
-                        right: 20, // Adjust right padding to push the donut left
-                        top: 10,
-                        bottom: 10
-                    }
-                }
+                // REMOVED: The `layout.padding` object that was shrinking the donut
+                // The donut will now expand to fill the available space in .chart-wrapper
             }
         });
     }
