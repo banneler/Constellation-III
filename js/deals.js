@@ -1,13 +1,13 @@
 // js/deals.js
-import { 
-    SUPABASE_URL, 
-    SUPABASE_ANON_KEY, 
-    formatMonthYear, 
-    formatCurrencyK, 
-    formatCurrency, 
-    themes, 
-    setupModalListeners, 
-    showModal, 
+import {
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
+    formatMonthYear,
+    formatCurrencyK,
+    formatCurrency,
+    themes,
+    setupModalListeners,
+    showModal,
     hideModal,
     updateActiveNavLink
 } from './shared_constants.js';
@@ -111,6 +111,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
+    // --- Chart Colors: Monochrome Green Palette ---
+    const monochromeGreenPalette = [
+        '#004d00', // Darker Green
+        '#006600', // Medium Green
+        '#008000', // Forest Green
+        '#009900', // Brighter Green
+        '#00b300', // Lime Green
+        '#00cc00'  // Lightest Green
+    ];
+
     // --- Render Functions ---
     function renderDealsByStageChart() {
         if (!dealsByStageCanvas || !stageChartEmptyMessage) return;
@@ -131,7 +141,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }, {});
         const labels = Object.keys(stageCounts);
         const data = Object.values(stageCounts);
-        const chartColors = ['#1e3a8a', '#1d4ed8', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd'];
+
         if (state.dealsByStageChart) {
             state.dealsByStageChart.destroy();
         }
@@ -142,7 +152,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 datasets: [{
                     label: 'Deals by Stage',
                     data: data,
-                    backgroundColor: chartColors,
+                    backgroundColor: monochromeGreenPalette, // Using the new monochrome green
                     borderColor: 'var(--bg-medium)',
                     borderWidth: 2
                 }]
@@ -155,6 +165,17 @@ document.addEventListener("DOMContentLoaded", async () => {
                         position: 'right',
                         labels: {
                             color: 'var(--text-medium)'
+                        }
+                    },
+                    tooltip: { // Improved tooltip to show count and percentage
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed;
+                                const total = context.dataset.data.reduce((sum, current) => sum + current, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return `${label}: ${value} deals (${percentage}%)`;
+                            }
                         }
                     }
                 }
@@ -181,14 +202,17 @@ document.addEventListener("DOMContentLoaded", async () => {
             const closeDate = new Date(deal.close_month);
             const diffTime = closeDate - today;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            if (diffDays >= 0 && diffDays <= 30) { funnel['0-30 Days'] += deal.mrc || 0; } 
-            else if (diffDays >= 31 && diffDays <= 60) { funnel['31-60 Days'] += deal.mrc || 0; } 
-            else if (diffDays >= 61 && diffDays <= 90) { funnel['61-90 Days'] += deal.mrc || 0; } 
+            if (diffDays >= 0 && diffDays <= 30) { funnel['0-30 Days'] += deal.mrc || 0; }
+            else if (diffDays >= 31 && diffDays <= 60) { funnel['31-60 Days'] += deal.mrc || 0; }
+            else if (diffDays >= 61 && diffDays <= 90) { funnel['61-90 Days'] += deal.mrc || 0; }
             else if (diffDays > 90) { funnel['90+ Days'] += deal.mrc || 0; }
         });
         const labels = Object.keys(funnel);
-        const data = Object.values(funnel).map(val => val / 1000);
-        const chartColors = ['#60a5fa', '#3b82f6', '#2563eb', '#1d4ed8'];
+        const data = Object.values(funnel); // Removed / 1000 here for full currency formatting on axis
+
+        // Reverse the palette for the bar chart to have the darkest green for 0-30 days
+        const reversedMonochromeGreenPalette = [...monochromeGreenPalette].reverse();
+
         if (state.dealsByTimeChart) {
             state.dealsByTimeChart.destroy();
         }
@@ -198,7 +222,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 labels: labels,
                 datasets: [{
                     data: data,
-                    backgroundColor: chartColors,
+                    backgroundColor: reversedMonochromeGreenPalette.slice(0, labels.length), // Use reversed palette
                 }]
             },
             options: {
@@ -207,10 +231,30 @@ document.addEventListener("DOMContentLoaded", async () => {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
+                    tooltip: { // Customize tooltip for Bar Chart
+                        callbacks: {
+                            label: function(context) {
+                                return `MRC: ${formatCurrency(context.parsed.x)}`;
+                            }
+                        }
+                    }
                 },
                 scales: {
-                    x: { ticks: { color: 'var(--text-medium)' }, grid: { color: 'var(--border-color)' } },
-                    y: { ticks: { color: 'var(--text-medium)' }, grid: { display: false } }
+                    x: {
+                        ticks: {
+                            color: 'var(--text-medium)',
+                            callback: function(value, index, values) {
+                                return formatCurrencyK(value); // Using formatCurrencyK for axis labels
+                            }
+                        },
+                        grid: { color: 'var(--border-color)' }
+                    },
+                    y: {
+                        ticks: { color: 'var(--text-medium)' },
+                        grid: { display: false },
+                        barPercentage: 0.7,      // Adjusted bar thickness
+                        categoryPercentage: 0.6  // Adjusted space between bars
+                    }
                 }
             }
         });
@@ -226,7 +270,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const valA = a[state.dealsSortBy];
             const valB = b[state.dealsSortBy];
             let comparison = 0;
-            if (typeof valA === "string") { comparison = (valA || "").localeCompare(valB || ""); } 
+            if (typeof valA === "string") { comparison = (valA || "").localeCompare(valB || ""); }
             else { if (valA > valB) comparison = 1; else if (valA < valB) comparison = -1; }
             return state.dealsSortDir === "desc" ? comparison * -1 : comparison;
         });
@@ -249,7 +293,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const isMyTeamView = state.dealsViewMode === 'all' && isManager;
         if (metricCurrentCommitTitle && metricBestCaseTitle) {
             metricCurrentCommitTitle.textContent = isMyTeamView ? "My Team's Current Commit" : "My Current Commit";
-            metricBestCaseTitle.textContent = isMyTeamView ? "My Team's Current Best Case" : "My Current Best Case";
+            metricBestCaseTitle.textContent = isMyTeamView ? "My Team's Current Best Case" : "My Team's Current Best Case";
         }
         let effectiveMonthlyQuota = 0;
         if (isMyTeamView) {
@@ -364,7 +408,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             });
         }
     }
-    
+
     function initializePage() {
         const savedTheme = localStorage.getItem('crm-theme') || 'dark';
         const savedThemeIndex = themes.indexOf(savedTheme);
