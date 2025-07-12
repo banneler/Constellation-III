@@ -208,7 +208,7 @@ body:not(.theme-green) .nav-sidebar {
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s, transform 0.1s;
   text-decoration: none;
-  font-weight: 600; 
+  font-weight: 600;
   display: block;
 }
 body:not(.theme-green) .nav-button {
@@ -257,13 +257,14 @@ body.theme-green .btn-secondary.active {
 /* --- CHART STYLES --- */
 .charts-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* SHRUNK */
-    gap: 20px;
+    /* Reduced minmax and increased gap for better spacing with smaller charts */
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Adjusted for smaller charts */
+    gap: 25px; /* Increased gap between charts */
     margin-bottom: 20px;
 }
 
 .chart-container {
-    padding: 15px;
+    padding: 10px; /* Reduced padding */
     background-color: var(--bg-medium);
     border: 1px solid var(--border-color);
     box-shadow: 0 6px 15px var(--shadow-medium);
@@ -276,12 +277,17 @@ body:not(.theme-green) .chart-container {
 
 .chart-container h4 {
     text-align: center;
-    margin-bottom: 10px;
+    margin-bottom: 8px; /* Slightly reduced margin */
     color: var(--text-medium);
+    font-size: 1rem; /* Slightly smaller title */
 }
 .chart-wrapper {
     position: relative;
-    height: 200px; /* SHRUNK */
+    height: 180px; /* Reduced overall height for the charts */
+    width: 100%;
+    /* Optional: Add a max-width to prevent them from becoming too large on very wide screens */
+    max-width: 350px; /* Example max width to keep them compact */
+    margin: 0 auto; /* Center the wrapper within its grid cell */
 }
 .chart-wrapper canvas {
     position: absolute;
@@ -293,7 +299,7 @@ body:not(.theme-green) .chart-container {
 
 .chart-empty-message {
   width: 100%;
-  min-height: 200px;
+  min-height: 180px; /* Matched to chart-wrapper height */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -316,16 +322,16 @@ body:not(.theme-green) .chart-container {
 .metric-card {
   background-color: var(--bg-medium);
   border: 1px solid var(--border-color);
-  padding: 10px 15px; /* SHRUNK */
+  padding: 10px 15px;
   text-align: center;
   flex: 1;
-  min-width: 180px;
+  min-width: 160px; /* Slightly reduced min-width */
   box-shadow: 0 4px 10px var(--shadow-medium);
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Center content vertically */
+  justify-content: center;
   position: relative;
-  min-height: 80px; /* Give a min-height */
+  min-height: 70px; /* Slightly reduced min-height */
   transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
 }
 body:not(.theme-green) .metric-card {
@@ -337,20 +343,20 @@ body.theme-dark .metric-card {
 }
 
 .metric-title {
-  font-size: 13px; /* SHRUNK */
+  font-size: 0.85rem; /* Slightly smaller font */
   color: var(--text-medium);
-  margin-bottom: 5px;
+  margin-bottom: 3px; /* Reduced margin */
 }
 
 .metric-value {
-  font-size: 24px; /* SHRUNK */
+  font-size: 1.6rem; /* Slightly smaller font */
   font-weight: bold;
   color: var(--completed-color);
-  padding-bottom: 15px;
+  padding-bottom: 10px; /* Reduced padding */
 }
 
 .metric-quota-percent {
-  font-size: 16px; /* SHRUNK */
+  font-size: 0.9rem; /* Slightly smaller font */
   color: var(--text-medium);
   position: absolute;
   bottom: 5px;
@@ -918,6 +924,10 @@ body.theme-green .sequence-status-icon-svg-inner {
 }
 body:not(.theme-green) .auth-box {
   border-radius: 10px;
+}
+
+body.theme-dark .auth-box {
+  background: linear-gradient(160deg, var(--bg-medium), var(--bg-dark));
 }
 
 .auth-error {
