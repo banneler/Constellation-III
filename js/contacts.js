@@ -9,10 +9,11 @@ import {
     showModal,
     hideModal,
     updateActiveNavLink,
-    parseCsvRow // Added parseCsvRow import
+    parseCsvRow
 } from './shared_constants.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
+    console.log("contacts.js script started parsing."); // Debugging log
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let state = {
@@ -55,9 +56,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const themeToggleBtn = document.getElementById("theme-toggle-btn");
     const themeNameSpan = document.getElementById("theme-name");
 
-    // NEW Ring Chart related elements (added to contacts.html)
+    // Ring Chart related elements (UPDATED to match new HTML IDs/classes)
     const ringChartContainer = document.querySelector('.ring-chart-container');
-    const ringChart = document.getElementById('ring-chart');
+    const ringChartFill = document.getElementById('ring-chart-fill'); // Use the new fill element
     const ringChartText = document.getElementById('ring-chart-text');
     const sequenceStatusContent = document.getElementById('sequence-status-content');
     const noSequenceText = document.getElementById('no-sequence-text');
@@ -108,7 +109,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     state[tableName] = result.value.data || [];
                 } else {
                     console.error(`Error fetching ${tableName}:`, result.status === 'fulfilled' ? result.value.error?.message : result.reason);
-                    state[tableName] = []; // Ensure state[tableName] is an array even on error
+                    state[tableName] = [];
                 }
             });
         } catch (error) {
@@ -116,7 +117,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         } finally {
             renderContactList();
             if (state.currentContact) {
-                renderContactDetails(state.currentContact.id);
+                const reloadedContact = state.contacts.find(c => c.id === state.currentContact.id);
+                if (reloadedContact) {
+                    state.currentContact = reloadedContact;
+                    renderContactDetails(state.currentContact.id);
+                } else {
+                    hideContactDetails();
+                }
             } else {
                 hideContactDetails();
             }
@@ -161,22 +168,21 @@ document.addEventListener("DOMContentLoaded", async () => {
             const account = state.accounts.find(a => a.id === contact.account_id);
             const activeSequence = state.contact_sequences.find(cs => cs.contact_id === contact.id && cs.status === 'Active');
 
-            // Simplified display for contact list: just sequence name/status
-            let sequenceStatusText = '';
+            // NEW: Add the small indicator dot beside the name
+            let sequenceStatusIndicatorHtml = '';
             if (activeSequence) {
-                const sequence = state.sequences.find(s => s.id === activeSequence.sequence_id);
-                sequenceStatusText = sequence ? ` - ${sequence.name}` : ' - Active';
+                sequenceStatusIndicatorHtml = `<span class="active-sequence-dot"></span>`;
             }
 
             contactDiv.innerHTML = `
-                <div>${contact.first_name} ${contact.last_name} ${sequenceStatusText}</div>
+                <div>${contact.first_name} ${contact.last_name} ${sequenceStatusIndicatorHtml}</div>
                 <small>${account ? account.name : 'No Account'}</small>
             `;
             contactList.appendChild(contactDiv);
         });
 
         document.querySelectorAll("#contact-list .list-item").forEach(item => {
-            item.removeEventListener('click', handleContactClick); // Prevent duplicate listeners
+            item.removeEventListener('click', handleContactClick);
             item.addEventListener('click', handleContactClick);
         });
     }
@@ -192,7 +198,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     async function renderContactDetails(contactId) {
-        if (!contactForm) return;
+        console.log("Rendering contact details for ID:", contactId); // Debugging
+        if (!contactForm) {
+            console.error("Contact form not found in DOM.");
+            return;
+        }
 
         const contact = state.contacts.find(c => c.id === contactId);
         if (!contact) {
@@ -226,44 +236,58 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Render Sequence Status Ring
         const activeSequence = state.contact_sequences.find(cs => cs.contact_id === contact.id && cs.status === 'Active');
 
-        if (ringChartContainer && ringChart && ringChartText && sequenceStatusContent && noSequenceText && contactSequenceInfoText) {
+        // Check for all necessary elements before trying to manipulate them
+        if (ringChartContainer && ringChartFill && ringChartText && sequenceStatusContent && noSequenceText && contactSequenceInfoText) {
             if (activeSequence) {
                 const sequence = state.sequences.find(s => s.id === activeSequence.sequence_id);
-                const totalSteps = state.sequence_steps.filter(ss => ss.sequence_id === activeSequence.sequence_id).length;
-                const completedSteps = activeSequence.current_step_number - 1; // Assuming step_number starts at 1
+                const allSequenceSteps = state.sequence_steps.filter(ss => ss.sequence_id === activeSequence.sequence_id);
+                const totalSteps = allSequenceSteps.length;
+                // completedSteps should be the number of steps *before* the current step
+                const completedSteps = activeSequence.current_step_number - 1;
+
+                // Ensure totalSteps is not zero for progress calculation
                 const progressPercent = totalSteps > 0 ? (completedSteps / totalSteps) * 100 : 0;
 
-                // Set conic-gradient background for the ring progress
-                ringChart.style.backgroundImage = `conic-gradient(var(--primary-blue) 0% ${progressPercent}%, var(--bg-medium) ${progressPercent}% 100%)`;
-                ringChartText.textContent = `${progressPercent.toFixed(0)}%`;
-                contactSequenceInfoText.textContent = `${sequence ? sequence.name : 'Unknown Sequence'} - Step ${activeSequence.current_step_number}/${totalSteps || '?'}`;
+                // Set the conic-gradient background for the ring fill
+                // Use var(--primary-blue) for progress color, and transparent for the unfilled part of this layer
+                ringChartFill.style.backgroundImage = `conic-gradient(var(--primary-blue) 0% ${progressPercent}%, transparent ${progressPercent}% 100%)`;
+
+                // Set ring text to fraction (e.g., 2/6)
+                ringChartText.textContent = `${completedSteps}/${totalSteps || '0'}`; // Show 0 if totalSteps is 0
+
+                // Set info text below the ring
+                contactSequenceInfoText.textContent = `${sequence ? sequence.name : 'Unknown Sequence'}`;
+                // Add current step to info text if available
+                if (totalSteps > 0) {
+                    contactSequenceInfoText.textContent += ` - Step ${activeSequence.current_step_number}/${totalSteps}`;
+                }
+
+
                 sequenceStatusContent.classList.remove('hidden');
                 noSequenceText.classList.add('hidden');
-
-                // Ensure Remove from Sequence button is visible for active sequences
                 removeContactFromSequenceBtn.classList.remove('hidden');
 
             } else {
                 // If not in active sequence, hide the ring and show "Not in a sequence"
                 sequenceStatusContent.classList.add('hidden');
                 noSequenceText.classList.remove('hidden');
-                removeContactFromSequenceBtn.classList.add('hidden'); // Hide button if no active sequence
+                removeContactFromSequenceBtn.classList.add('hidden');
             }
         } else {
-            console.warn("One or more ring chart related DOM elements not found!");
+            console.warn("One or more ring chart related DOM elements not found (debug elements):", {ringChartContainer, ringChartFill, ringChartText, sequenceStatusContent, noSequenceText, contactSequenceInfoText});
         }
 
         // Render Contact Activities
         renderContactActivities(contactId);
 
-        contactDetails.classList.remove("hidden"); // Ensure details panel is visible
+        document.getElementById("contact-details").classList.remove("hidden");
     }
 
     function renderContactActivities(contactId) {
         if (!contactActivitiesList) return;
         contactActivitiesList.innerHTML = "";
         const activities = state.activities.filter(act => act.contact_id === contactId);
-        activities.sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort by most recent first
+        activities.sort((a, b) => new Date(b.date) - new Date(a.date));
         if (activities.length === 0) {
             contactActivitiesList.innerHTML = '<li>No activities logged for this contact.</li>';
         } else {
@@ -279,15 +303,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (contactIdInput) contactIdInput.value = "";
         if (contactForm) contactForm.reset();
         if (contactLastSavedSpan) contactLastSavedSpan.textContent = "";
-        if (contactAccountNameSelect) contactAccountNameSelect.innerHTML = '<option value="">-- Select Account --</option>'; // Clear dropdown
-        if (contactActivitiesList) contactActivitiesList.innerHTML = ""; // Clear activities
-        if (contactSequenceStatusDiv) { // Reset sequence status display
+        if (contactAccountNameSelect) contactAccountNameSelect.innerHTML = '<option value="">-- Select Account --</option>';
+        if (contactActivitiesList) contactActivitiesList.innerHTML = "";
+        if (contactSequenceStatusDiv) {
             if (sequenceStatusContent) sequenceStatusContent.classList.add('hidden');
             if (noSequenceText) noSequenceText.classList.remove('hidden');
         }
         state.currentContact = null;
         document.querySelectorAll(".list-item").forEach(item => item.classList.remove("selected"));
-        // contactDetails.classList.add("hidden"); // Keep visible but empty if that's the desired UX
+        document.getElementById("contact-details").classList.add("hidden");
     }
 
     // --- Core Logic ---
@@ -303,7 +327,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             title: contactTitleInput.value.trim(),
             account_id: contactAccountNameSelect.value ? Number(contactAccountNameSelect.value) : null,
             notes: contactNotesInput.value.trim(),
-            user_id: state.currentUser.id, // Ensure user_id is set
+            user_id: state.currentUser.id,
         };
 
         if (!contactData.first_name || !contactData.last_name) {
@@ -313,14 +337,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         let error;
         if (state.currentContact && state.currentContact.id) {
-            // Update existing contact
             const { error: updateError } = await supabase
                 .from("contacts")
                 .update(contactData)
                 .eq("id", state.currentContact.id);
             error = updateError;
         } else {
-            // Insert new contact
             const { error: insertError } = await supabase
                 .from("contacts")
                 .insert(contactData);
@@ -332,12 +354,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             alert("Error saving contact: " + error.message);
         } else {
             alert("Contact saved successfully!");
-            await loadAllData(); // Reload all data to update list
-            // Re-select the contact after saving if it was an update
+            await loadAllData();
             if (state.currentContact) {
                 const updatedContact = state.contacts.find(c => c.id === state.currentContact.id);
                 if (updatedContact) {
-                    state.currentContact = updatedContact; // Update currentContact state with fresh data
+                    state.currentContact = updatedContact;
                     renderContactDetails(updatedContact.id);
                 }
             }
@@ -407,14 +428,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const sequenceId = document.getElementById("assign-sequence-select").value;
                 if (!sequenceId) { alert("Please select a sequence."); return; }
 
-                // Check if contact is already in this sequence or any active sequence
                 const existingContactSequence = state.contact_sequences.find(cs => cs.contact_id === state.currentContact.id && cs.status === 'Active');
                 if (existingContactSequence) {
                     alert(`This contact is already active in sequence: ${state.sequences.find(s => s.id === existingContactSequence.sequence_id)?.name || 'Unknown'}. Please remove them first.`);
                     return;
                 }
 
-                // Get first step of the selected sequence
                 const firstStep = state.sequence_steps
                     .filter(step => step.sequence_id == sequenceId)
                     .sort((a, b) => a.step_number - b.step_number)[0];
@@ -426,7 +445,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     sequence_id: Number(sequenceId),
                     current_step_number: firstStep.step_number,
                     status: "Active",
-                    next_step_due_date: new Date().toISOString(), // Start today or based on firstStep.delay_days
+                    next_step_due_date: new Date().toISOString(),
                     user_id: state.currentUser.id,
                 });
 
@@ -483,7 +502,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     async function handleBulkImport() {
-        contactCsvInput.click(); // Trigger the hidden file input
+        contactCsvInput.click();
     }
 
     async function processCsvFile(event) {
@@ -503,18 +522,16 @@ document.addEventListener("DOMContentLoaded", async () => {
                 return;
             }
 
-            // Assume first row is header
             const headers = parseCsvRow(lines[0]);
             const contactsToInsert = [];
 
-            // Map headers to expected column names
             const headerMap = {
                 'first_name': 'first_name', 'First Name': 'first_name',
                 'last_name': 'last_name', 'Last Name': 'last_name',
                 'email': 'email', 'Email': 'email',
                 'phone': 'phone', 'Phone': 'phone',
                 'title': 'title', 'Title': 'title',
-                'account_name': 'account_name', 'Account Name': 'account_name', // Needs special handling
+                'account_name': 'account_name', 'Account Name': 'account_name',
                 'notes': 'notes', 'Notes': 'notes'
             };
 
@@ -522,7 +539,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const values = parseCsvRow(lines[i]);
                 if (values.length !== headers.length) {
                     console.warn(`Skipping malformed row ${i + 1}: ${lines[i]}`);
-                    continue; // Skip rows that don't match header count
+                    continue;
                 }
 
                 const contact = { user_id: state.currentUser.id };
@@ -538,9 +555,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 if (existingAccount) {
                                     contact.account_id = existingAccount.id;
                                 } else {
-                                    // Optionally create new account here, or skip contact
                                     console.warn(`Account "${accountName}" not found for contact on row ${i + 1}. Contact will be created without account.`);
-                                    contact.account_id = null; // Set to null if account not found
+                                    contact.account_id = null;
                                 }
                             } else {
                                 contact.account_id = null;
@@ -597,14 +613,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
         if (addContactBtn) {
             addContactBtn.addEventListener("click", () => {
-                state.currentContact = null; // Clear current contact for new form
+                state.currentContact = null;
                 contactForm.reset();
                 contactIdInput.value = "";
                 contactLastSavedSpan.textContent = "Not yet saved.";
-                contactDetails.classList.remove("hidden"); // Show empty form
+                document.getElementById("contact-details").classList.remove("hidden");
                 contactFirstNameInput.focus();
-                renderContactDetails(-1); // Render details panel with no contact selected
-                renderContactActivities(-1); // Clear activities
+                // When adding a new contact, explicitly clear ring chart/status related elements
+                if (sequenceStatusContent) sequenceStatusContent.classList.add('hidden');
+                if (noSequenceText) noSequenceText.classList.remove('hidden');
+                if (contactActivitiesList) contactActivitiesList.innerHTML = "";
             });
         }
         if (contactSearchInput) {
@@ -655,7 +673,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 setupPageEventListeners();
                 await loadAllData();
 
-                // Check for contactId in URL params (for redirect from deals/accounts)
                 const urlParams = new URLSearchParams(window.location.search);
                 const contactIdFromUrl = urlParams.get('contactId');
                 if (contactIdFromUrl) {
