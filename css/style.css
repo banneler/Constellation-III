@@ -148,16 +148,16 @@ body.theme-green::before {
 
 /* --- SVG LOGO STYLES --- */
 .auth-logo, .nav-logo {
-    width: 250px; /* This will scale down with font-size if it was rem, but we keep px for fixed feel */
+    width: 250px;
     height: auto;
-    margin-bottom: 1.25rem; /* Reduced from 20px (16px * 1.25 = 20px) to scale */
+    margin-bottom: 1.25rem;
     filter: drop-shadow(0 0 7px var(--primary-blue));
     transition: filter 0.3s;
 }
 
 .nav-logo {
-    width: 180px; /* Keep fixed for consistent navigation */
-    margin: 0 auto 0.625rem auto; /* Reduced from 10px */
+    width: 180px;
+    margin: 0 auto 0.625rem auto;
     display: block;
 }
 
@@ -169,14 +169,15 @@ body.theme-green::before {
 
 .nav-logo path[fill="#010101"],
 .auth-logo path[fill="#010101"] {
-    fill: var(--logo-secondary-color);
+    fill: #FFFFFF !important;
     transition: fill 0.3s;
 }
 
-body.theme-dark .nav-logo path[fill="#010101"],
-body.theme-dark .auth-logo path[fill="#010101"] {
-    fill: #FFFFFF !important;
+body.theme-green .nav-logo path[fill="#010101"],
+body.theme-green .auth-logo path[fill="#010101"] {
+    fill: var(--logo-secondary-color) !important;
 }
+
 
 /* --- MAIN LAYOUT --- */
 .crm-container {
@@ -184,13 +185,13 @@ body.theme-dark .auth-logo path[fill="#010101"] {
     height: 100vh;
     background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
     transition: background 0.3s;
-    gap: 1.25rem; /* Reduced from 20px to scale */
+    gap: 1.25rem;
 }
 
 .nav-sidebar {
     width: 200px;
     background-color: var(--bg-light);
-    padding: 1.25rem 0.625rem; /* Reduced from 20px 10px */
+    padding: 1.25rem 0.625rem;
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
@@ -207,10 +208,10 @@ body:not(.theme-green) .nav-sidebar {
     background: none;
     border: none;
     color: var(--text-medium);
-    padding: 0.9375rem; /* Reduced from 15px */
-    margin: 0.3125rem 0; /* Reduced from 5px */
+    padding: 0.9375rem;
+    margin: 0.3125rem 0;
     text-align: left;
-    font-size: 1rem; /* Based on 1rem = 14px */
+    font-size: 1rem;
     cursor: pointer;
     transition: background-color 0.2s, color 0.2s, transform 0.1s;
     text-decoration: none;
@@ -251,7 +252,7 @@ body.theme-green .btn-secondary.active {
 
 .content-area {
     flex-grow: 1;
-    padding: 1.25rem; /* Reduced from 20px */
+    padding: 1.25rem;
     overflow-y: auto;
 }
 
@@ -264,13 +265,13 @@ body.theme-green .btn-secondary.active {
 .charts-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1.5625rem; /* Equivalent to 25px, scaled down */
-    margin-top: 1.25rem; /* Added margin to separate from table */
-    margin-bottom: 1.25rem; /* Reduced margin */
+    gap: 1.5625rem;
+    margin-top: 1.25rem;
+    margin-bottom: 1.25rem;
 }
 
 .chart-container {
-    padding: 0.625rem; /* Reduced from 10px */
+    padding: 0.625rem;
     background-color: var(--bg-medium);
     border: 1px solid var(--border-color);
     box-shadow: 0 6px 15px var(--shadow-medium);
@@ -283,15 +284,15 @@ body:not(.theme-green) .chart-container {
 
 .chart-container h4 {
     text-align: center;
-    margin-bottom: 0.5rem; /* Reduced from 8px */
+    margin-bottom: 0.5rem;
     color: var(--text-medium);
-    font-size: 0.9375rem; /* Scale from 1rem */
+    font-size: 0.9375rem;
 }
 .chart-wrapper {
     position: relative;
-    height: 11.25rem; /* Reduced from 180px (14px * 11.25 = 157.5px)  Adjusted for 14px base font */
+    height: 11.25rem;
     width: 100%;
-    max-width: 21.875rem; /* Adjusted for 350px, scaled from 16px base to 14px base */
+    max-width: 21.875rem;
     margin: 0 auto;
 }
 .chart-wrapper canvas {
@@ -304,7 +305,7 @@ body:not(.theme-green) .chart-container {
 
 .chart-empty-message {
     width: 100%;
-    min-height: 11.25rem; /* Match chart-wrapper height for consistency */
+    min-height: 11.25rem;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -314,29 +315,29 @@ body:not(.theme-green) .chart-container {
 
 /* --- DEALS METRICS (Resized) --- */
 .deals-view-toggle {
-    margin-bottom: 0.9375rem; /* Reduced from 15px */
+    margin-bottom: 0.9375rem;
 }
 .deals-metrics-container {
     display: flex;
     justify-content: space-around;
-    gap: 0.9375rem; /* Reduced from 15px */
-    margin-bottom: 1.25rem; /* Reduced from 20px */
+    gap: 0.9375rem;
+    margin-bottom: 1.25rem;
     flex-wrap: wrap;
 }
 
 .metric-card {
     background-color: var(--bg-medium);
     border: 1px solid var(--border-color);
-    padding: 0.625rem 0.9375rem; /* Reduced from 10px 15px */
+    padding: 0.625rem 0.9375rem;
     text-align: center;
     flex: 1;
-    min-width: 10rem; /* Reduced from 160px */
+    min-width: 10rem;
     box-shadow: 0 4px 10px var(--shadow-medium);
     display: flex;
     flex-direction: column;
     justify-content: center;
     position: relative;
-    min-height: 4.375rem; /* Reduced from 70px */
+    min-height: 4.375rem;
     transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
 }
 body:not(.theme-green) .metric-card {
@@ -348,32 +349,32 @@ body.theme-dark .metric-card {
 }
 
 .metric-title {
-    font-size: 0.75rem; /* Reduced from 0.85rem for a slightly smaller feel */
+    font-size: 0.75rem;
     color: var(--text-medium);
-    margin-bottom: 0.1875rem; /* Reduced from 3px */
+    margin-bottom: 0.1875rem;
 }
 
 .metric-value {
-    font-size: 1.4rem; /* Reduced from 1.6rem for a slightly smaller feel */
+    font-size: 1.4rem;
     font-weight: bold;
     color: var(--completed-color);
-    padding-bottom: 0.625rem; /* Reduced from 10px */
+    padding-bottom: 0.625rem;
 }
 
 .metric-quota-percent {
-    font-size: 0.8rem; /* Reduced from 0.9rem for a slightly smaller feel */
+    font-size: 0.8rem;
     color: var(--text-medium);
     position: absolute;
-    bottom: 0.3125rem; /* Reduced from 5px */
-    right: 0.5rem; /* Reduced from 8px */
+    bottom: 0.3125rem;
+    right: 0.5rem;
     white-space: nowrap;
 }
 
 
 /* --- DOWNLOADS SECTION --- */
 .downloads-section {
-    margin-top: 2.5rem; /* Reduced from 40px */
-    padding: 1.25rem; /* Reduced from 20px */
+    margin-top: 2.5rem;
+    padding: 1.25rem;
     background-color: var(--bg-light);
     border: 1px solid var(--border-color);
     transition: background-color 0.3s, border-color 0.3s;
@@ -386,13 +387,13 @@ body:not(.theme-green) .downloads-section {
 .downloads-section h4 {
     margin-top: 0;
     border-bottom: 1px solid var(--border-color);
-    padding-bottom: 0.625rem; /* Reduced from 10px */
-    margin-bottom: 0.625rem; /* Reduced from 10px */
+    padding-bottom: 0.625rem;
+    margin-bottom: 0.625rem;
 }
 
 .downloads-links {
     display: flex;
-    gap: 0.9375rem; /* Reduced from 15px */
+    gap: 0.9375rem;
     flex-wrap: wrap;
 }
 
@@ -403,14 +404,14 @@ body:not(.theme-green) .downloads-section {
 /* --- UI COMPONENTS --- */
 .split-view {
     display: flex;
-    gap: 1.25rem; /* Reduced from 20px */
-    height: calc(100vh - 7.5rem); /* Adjusted for overall smaller elements */
+    gap: 1.25rem;
+    height: calc(100vh - 7.5rem);
 }
 
 .item-list-container {
     display: flex;
     flex-direction: column;
-    width: 15.625rem; /* Reduced from 250px */
+    width: 15.625rem;
     flex-shrink: 0;
 }
 
@@ -419,7 +420,7 @@ body:not(.theme-green) .downloads-section {
     border: 1px solid var(--border-color);
     overflow-y: auto;
     flex-grow: 1;
-    margin-top: 0.625rem; /* Reduced from 10px */
+    margin-top: 0.625rem;
     box-shadow: inset 0 0 5px var(--shadow-light);
     transition: background-color 0.3s, border-color 0.3s;
 }
@@ -428,7 +429,7 @@ body:not(.theme-green) .item-list {
 }
 
 .list-item {
-    padding: 0.625rem 0.9375rem; /* Reduced from 10px 15px */
+    padding: 0.625rem 0.9375rem;
     border-bottom: 1px solid var(--border-color);
     cursor: pointer;
     transition: background-color 0.2s, transform 0.1s, border-color 0.3s;
@@ -456,7 +457,7 @@ body:not(.theme-green) .list-item.selected {
 .details-panel {
     flex-grow: 1;
     background-color: var(--bg-medium);
-    padding: 1.25rem; /* Reduced from 20px */
+    padding: 1.25rem;
     overflow-y: auto;
     box-shadow: 0 4px 15px var(--shadow-medium);
     transition: background-color 0.3s, box-shadow 0.3s;
@@ -466,12 +467,12 @@ body:not(.theme-green) .details-panel {
 }
 
 .related-info {
-    margin-top: 1.25rem; /* Reduced from 20px */
+    margin-top: 1.25rem;
 }
 
 #contact-sequence-status {
     background-color: var(--bg-dark);
-    padding: 0.9375rem; /* Reduced from 15px */
+    padding: 0.9375rem;
     border: 1px solid var(--border-color);
     box-shadow: inset 0 0 5px var(--shadow-light);
     transition: background-color 0.3s, border-color 0.3s;
@@ -484,7 +485,7 @@ body:not(.theme-green) #contact-sequence-status {
 .form-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 0 1.25rem; /* Reduced from 20px */
+    gap: 0 1.25rem;
 }
 
 .full-span-grid-item {
@@ -495,8 +496,8 @@ input,
 select,
 textarea {
     width: 100%;
-    padding: 0.625rem; /* Reduced from 10px */
-    margin: 0.3125rem 0 0.9375rem 0; /* Reduced from 5px 0 15px 0 */
+    padding: 0.625rem;
+    margin: 0.3125rem 0 0.9375rem 0;
     background-color: var(--bg-dark);
     border: 1px solid var(--border-color);
     color: var(--text-light);
@@ -525,29 +526,29 @@ label {
 }
 
 .notes-section {
-    margin-top: 0.625rem; /* Reduced from 10px */
+    margin-top: 0.625rem;
 }
 
 .notes-section textarea {
-    min-height: 6.25rem; /* Reduced from 100px */
+    min-height: 6.25rem;
 }
 
 .last-saved-text {
     display: block;
     text-align: right;
-    font-size: 0.75rem; /* Reduced from 12px */
+    font-size: 0.75rem;
     color: var(--text-medium);
-    margin-top: -0.625rem; /* Reduced from -10px */
+    margin-top: -0.625rem;
 }
 
 .btn-primary,
 .btn-danger,
 .btn-secondary {
-    padding: 0.625rem 0.9375rem; /* Reduced from 10px 15px */
+    padding: 0.625rem 0.9375rem; /* Standard button padding */
     border: none;
     color: var(--text-light);
     cursor: pointer;
-    font-size: 0.875rem; /* Reduced from 14px */
+    font-size: 0.875rem;     /* Standard button font size */
     transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s, background-color 0.3s;
     font-weight: 600;
 }
@@ -602,27 +603,27 @@ body.theme-green .btn-danger {
 
 .full-width {
     width: 100%;
-    margin-bottom: 0.625rem; /* Reduced from 10px */
+    margin-bottom: 0.625rem;
 }
 
 .controls-bar,
 .form-buttons,
 .action-buttons {
     display: flex;
-    gap: 0.625rem; /* Reduced from 10px */
-    margin-bottom: 0.9375rem; /* Reduced from 15px */
+    gap: 0.625rem;
+    margin-bottom: 0.9375rem;
     align-items: center;
 }
 
 #contact-search {
     width: 100%;
-    margin-bottom: 0.625rem; /* Reduced from 10px */
+    margin-bottom: 0.625rem;
 }
 
 hr {
     border: none;
     border-top: 1px solid var(--border-color);
-    margin: 1.25rem 0; /* Reduced from 20px */
+    margin: 1.25rem 0;
     transition: border-color 0.3s;
 }
 
@@ -645,7 +646,7 @@ body:not(.theme-green) table {
 
 th,
 td {
-    padding: 0.75rem 0.9375rem; /* Reduced from 12px 15px */
+    padding: 0.75rem 0.9375rem;
     border: 1px solid var(--border-color);
     text-align: left;
     transition: border-color 0.3s, background-color 0.3s;
@@ -704,20 +705,46 @@ th.sortable.desc span::after {
     border-top: 5px solid var(--text-light);
 }
 
+/* Specific styling for the Actions column in My Tasks table (and others) */
+#my-tasks-table th:last-child,
+#my-tasks-table td:last-child,
+#deals-table th:last-child, /* Included for Deals page as well */
+#deals-table td:last-child, /* Included for Deals page as well */
+#dashboard-table th:last-child, /* Included for Sequence Steps Due */
+#dashboard-table td:last-child /* Included for Sequence Steps Due */
+{
+    /* Use this to make the column fit the content */
+    width: 1%;
+    white-space: nowrap; /* Prevent wrapping content */
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+/* Center buttons within ALL action columns (last td in a row) */
+/* This now targets all last-child TDs that contain buttons */
+table td:last-child {
+    display: flex; /* Use flexbox for button alignment */
+    justify-content: center; /* Centers items horizontally */
+    align-items: center; /* Centers items vertically */
+    gap: 0.3125rem; /* Adds a small gap between buttons (5px, scaled) */
+}
+
+
+/* Specific rules for Deals table last columns - removed fixed width, relying on the new generic rule */
 #deals-table th:nth-child(1),
 #deals-table td:nth-child(1) {
-    width: 5rem; /* Reduced from 80px */
+    width: 5rem;
     text-align: center;
 }
 
 #deals-table th:nth-child(3),
 #deals-table td:nth-child(3) {
-    width: 6.25rem; /* Reduced from 100px */
+    width: 6.25rem;
 }
 
 #deals-table th:nth-child(4),
 #deals-table td:nth-child(4) {
-    width: 9.375rem; /* Reduced from 150px */
+    width: 9.375rem;
 }
 
 #deals-table th:nth-child(8),
@@ -725,15 +752,10 @@ th.sortable.desc span::after {
     width: 25%;
 }
 
-#deals-table th:last-child,
-#deals-table td:last-child {
-    width: 5rem; /* Reduced from 80px */
-    text-align: center;
-}
 
 #account-deals-table th:nth-child(1),
 #account-deals-table td:nth-child(1) {
-    width: 3.75rem; /* Reduced from 60px */
+    width: 3.75rem;
     text-align: center;
 }
 
@@ -743,8 +765,8 @@ table input[type="checkbox"] {
     border: 1px solid var(--border-color);
     background-color: var(--bg-dark);
     appearance: none;
-    width: 1.125rem; /* Reduced from 18px */
-    height: 1.125rem; /* Reduced from 18px */
+    width: 1.125rem;
+    height: 1.125rem;
     cursor: pointer;
     vertical-align: middle;
     position: relative;
@@ -760,7 +782,7 @@ table input[type="checkbox"]:checked {
 
 table input[type="checkbox"]:checked::after {
     content: "✔";
-    font-size: 0.875rem; /* Reduced from 14px */
+    font-size: 0.875rem;
     color: var(--text-light);
     position: absolute;
     top: 50%;
@@ -788,9 +810,9 @@ table input[type="checkbox"]:focus {
 
 .modal-content {
     background-color: var(--bg-medium);
-    padding: 1.25rem; /* Reduced from 20px */
+    padding: 1.25rem;
     width: 90%;
-    max-width: 31.25rem; /* Reduced from 500px */
+    max-width: 31.25rem;
     box-shadow: 0 8px 25px var(--shadow-strong);
 }
 body:not(.theme-green) .modal-content {
@@ -804,14 +826,14 @@ body.theme-dark .modal-content {
 .modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 0.625rem; /* Reduced from 10px */
-    margin-top: 1.25rem; /* Reduced from 20px */
+    gap: 0.625rem;
+    margin-top: 1.25rem;
 }
 
 #modal-body input,
 #modal-body textarea,
 #modal-body select {
-    margin-top: 0.625rem; /* Reduced from 10px */
+    margin-top: 0.625rem;
 }
 
 /* --- UTILITY & MISC --- */
@@ -827,9 +849,9 @@ ul {
 #account-activities-list li,
 #contact-activities-list li {
     background-color: var(--bg-dark);
-    padding: 0.5rem 0.75rem; /* Reduced from 8px 12px */
-    margin-bottom: 0.3125rem; /* Reduced from 5px */
-    font-size: 0.875rem; /* Reduced from 14px */
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.3125rem;
+    font-size: 0.875rem;
     border-left: 3px solid var(--primary-blue);
     box-shadow: 0 1px 3px var(--shadow-light);
     transition: background-color 0.3s, border-color 0.3s;
@@ -841,8 +863,8 @@ body:not(.theme-green) #contact-activities-list li {
 
 .sequence-status-icon {
     color: var(--completed-color) !important;
-    font-size: 0.75rem; /* Reduced from 12px */
-    margin-left: 0.5rem; /* Reduced from 8px */
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
     display: inline-block;
     vertical-align: middle;
 }
@@ -851,9 +873,9 @@ body:not(.theme-green) #contact-activities-list li {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1rem; /* Reduced from 16px */
-    height: 1rem; /* Reduced from 16px */
-    margin-left: 0.3125rem; /* Reduced from 5px */
+    width: 1rem;
+    height: 1rem;
+    margin-left: 0.3125rem;
     vertical-align: middle;
     flex-shrink: 0;
 }
@@ -901,30 +923,30 @@ body.theme-green .sequence-status-icon-svg-inner {
     }
     .metric-card {
         width: 100%;
-        max-width: 18.75rem; /* Reduced from 300px */
+        max-width: 18.75rem;
     }
 }
 
 /* --- AUTHENTICATION STYLES --- */
 .auth-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100vw;
-    height: 100vh;
     position: fixed;
     top: 0;
     left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     z-index: 2000;
     background: var(--bg-dark);
 }
 
 .auth-box {
     background-color: var(--bg-medium);
-    padding: 1.875rem; /* Reduced from 30px */
+    padding: 1.25rem 1.875rem; /* Adjusted padding: 20px top/bottom, 30px left/right */
     box-shadow: 0 8px 25px var(--shadow-strong);
     width: 100%;
-    max-width: 25rem; /* Reduced from 400px */
+    max-width: 25rem;
     text-align: center;
 }
 body:not(.theme-green) .auth-box {
@@ -937,17 +959,20 @@ body.theme-dark .auth-box {
 
 .auth-error {
     color: var(--danger-red);
-    min-height: 1.25rem; /* Reduced from 20px */
+    min-height: 1.25rem;
 }
 
-#auth-toggle-link {
+#auth-toggle-link,
+#forgot-password-link { /* Target both links */
     display: block;
-    margin-top: 0.9375rem; /* Reduced from 15px */
+    margin-top: 0.625rem; /* Adjusted margin for both links */
     color: var(--primary-blue);
     text-decoration: none;
+    font-size: 0.875rem; /* Consistent smaller font size */
 }
 
-#auth-toggle-link:hover {
+#auth-toggle-link:hover,
+#forgot-password-link:hover {
     text-decoration: underline;
 }
 
@@ -970,54 +995,14 @@ body.theme-dark .auth-box {
 }
 
 .spinner {
-    border: 0.5rem solid var(--bg-light); /* Reduced from 8px */
-    border-top: 0.5rem solid var(--primary-blue); /* Reduced from 8px */
+    border: 0.5rem solid var(--bg-light);
+    border-top: 0.5rem solid var(--primary-blue);
     border-radius: 50%;
-    width: 3.75rem; /* Reduced from 60px */
-    height: 3.75rem; /* Reduced from 60px */
+    width: 3.75rem;
+    height: 3.75rem;
     animation: spin 1s linear infinite;
 }
-/* --- SCROLLBAR STYLING (for WebKit browsers) --- */
 
-/* For the overall scrollbar track */
-::-webkit-scrollbar {
-    width: 0.75rem; /* Adjust width of vertical scrollbar */
-    height: 0.75rem; /* Adjust height of horizontal scrollbar */
-}
-
-/* For the draggable thumb */
-::-webkit-scrollbar-thumb {
-    background-color: var(--secondary-gray); /* Match a muted gray from your theme */
-    border-radius: 0.5rem; /* Rounded corners for the thumb */
-    border: 2px solid var(--bg-medium); /* A border to separate it from the track */
-}
-
-/* On hover for the thumb */
-::-webkit-scrollbar-thumb:hover {
-    background-color: var(--primary-blue); /* Highlight on hover, using your primary blue */
-}
-
-/* For the track (the background where the thumb slides) */
-::-webkit-scrollbar-track {
-    background-color: var(--bg-dark); /* Dark background for the track */
-    border-radius: 0.5rem;
-}
-
-/* Specific styling for the Green Screen Theme scrollbars */
-body.theme-green ::-webkit-scrollbar-thumb {
-    background-color: var(--text-medium); /* Use a bright green for thumb in green theme */
-    border: 2px solid var(--bg-dark);
-    box-shadow: 0 0 5px rgba(0, 255, 65, 0.4); /* Add a subtle glow */
-}
-
-body.theme-green ::-webkit-scrollbar-thumb:hover {
-    background-color: var(--text-light); /* Even brighter on hover */
-    box-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
-}
-
-body.theme-green ::-webkit-scrollbar-track {
-    background-color: var(--bg-medium); /* Darker green background for the track */
-}
 @keyframes spin {
     0% {
         transform: rotate(0deg);
@@ -1025,4 +1010,46 @@ body.theme-green ::-webkit-scrollbar-track {
     100% {
         transform: rotate(360deg);
     }
+}
+
+/* --- SCROLLBAR STYLING (for WebKit browsers) --- */
+
+/* For the overall scrollbar track */
+::-webkit-scrollbar {
+    width: 0.75rem;
+    height: 0.75rem;
+}
+
+/* For the draggable thumb */
+::-webkit-scrollbar-thumb {
+    background-color: var(--secondary-gray);
+    border-radius: 0.5rem;
+    border: 2px solid var(--bg-medium);
+}
+
+/* On hover for the thumb */
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--primary-blue);
+}
+
+/* For the track (the background where the thumb slides) */
+::-webkit-scrollbar-track {
+    background-color: var(--bg-dark);
+    border-radius: 0.5rem;
+}
+
+/* Specific styling for the Green Screen Theme scrollbars */
+body.theme-green ::-webkit-scrollbar-thumb {
+    background-color: var(--text-medium);
+    border: 2px solid var(--bg-dark);
+    box-shadow: 0 0 5px rgba(0, 255, 65, 0.4);
+}
+
+body.theme-green ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-light);
+    box-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
+}
+
+body.theme-green ::-webkit-scrollbar-track {
+    background-color: var(--bg-medium);
 }
