@@ -169,14 +169,16 @@ body.theme-green::before {
 
 .nav-logo path[fill="#010101"],
 .auth-logo path[fill="#010101"] {
-    fill: var(--logo-secondary-color);
+    fill: #FFFFFF !important; /* Ensure this stays white for dark theme logo contrast */
     transition: fill 0.3s;
 }
 
-body.theme-dark .nav-logo path[fill="#010101"],
-body.theme-dark .auth-logo path[fill="#010101"] {
-    fill: #FFFFFF !important;
+/* Override for theme-green specific logo color */
+body.theme-green .nav-logo path[fill="#010101"],
+body.theme-green .auth-logo path[fill="#010101"] {
+    fill: var(--logo-secondary-color) !important; /* Use theme-specific secondary color for green theme */
 }
+
 
 /* --- MAIN LAYOUT --- */
 .crm-container {
@@ -704,20 +706,49 @@ th.sortable.desc span::after {
     border-top: 5px solid var(--text-light);
 }
 
+/* Specific styling for the Actions column in My Tasks table */
+#my-tasks-table th:last-child,
+#my-tasks-table td:last-child {
+    width: 1%; /* Sets width to minimum required by content */
+    white-space: nowrap; /* Prevents text/buttons from wrapping */
+    padding-left: 0.5rem; /* Slightly reduced padding */
+    padding-right: 0.5rem; /* Slightly reduced padding */
+}
+
+/* Center buttons within ALL action columns (last td in a row) */
+table td:last-child {
+    text-align: center; /* Centers inline content like buttons/text */
+    display: flex; /* Use flexbox for better button alignment */
+    justify-content: center; /* Centers items horizontally */
+    align-items: center; /* Centers items vertically */
+    gap: 0.3125rem; /* Adds a small gap between buttons (5px, scaled) */
+}
+
+/* Ensure buttons themselves take up less space and are styled consistently */
+table td:last-child .btn-primary,
+table td:last-child .btn-secondary,
+table td:last-child .btn-danger {
+    padding: 0.4rem 0.6rem; /* Slightly smaller padding for buttons */
+    font-size: 0.75rem;     /* Slightly smaller font size for button text */
+    flex-shrink: 0;         /* Prevents buttons from shrinking */
+}
+
+
+/* Specific rules for Deals table last columns - adjust if conflicts occur */
 #deals-table th:nth-child(1),
 #deals-table td:nth-child(1) {
-    width: 5rem; /* Reduced from 80px */
+    width: 5rem;
     text-align: center;
 }
 
 #deals-table th:nth-child(3),
 #deals-table td:nth-child(3) {
-    width: 6.25rem; /* Reduced from 100px */
+    width: 6.25rem;
 }
 
 #deals-table th:nth-child(4),
 #deals-table td:nth-child(4) {
-    width: 9.375rem; /* Reduced from 150px */
+    width: 9.375rem;
 }
 
 #deals-table th:nth-child(8),
@@ -725,15 +756,21 @@ th.sortable.desc span::after {
     width: 25%;
 }
 
-#deals-table th:last-child,
-#deals-table td:last-child {
-    width: 5rem; /* Reduced from 80px */
+/* Remove or adjust this if the generic 'table td:last-child' works better for deals too */
+#deals-table th:last-child {
+    width: 5rem; /* You might want this to be auto or 1% if you want it to shrink with buttons */
     text-align: center;
 }
+/* If this causes issues with buttons centering in deals, you might comment it out or adjust */
+/* #deals-table td:last-child {
+    width: 5rem;
+    text-align: center;
+} */
+
 
 #account-deals-table th:nth-child(1),
 #account-deals-table td:nth-child(1) {
-    width: 3.75rem; /* Reduced from 60px */
+    width: 3.75rem;
     text-align: center;
 }
 
@@ -743,8 +780,8 @@ table input[type="checkbox"] {
     border: 1px solid var(--border-color);
     background-color: var(--bg-dark);
     appearance: none;
-    width: 1.125rem; /* Reduced from 18px */
-    height: 1.125rem; /* Reduced from 18px */
+    width: 1.125rem;
+    height: 1.125rem;
     cursor: pointer;
     vertical-align: middle;
     position: relative;
@@ -760,7 +797,7 @@ table input[type="checkbox"]:checked {
 
 table input[type="checkbox"]:checked::after {
     content: "✔";
-    font-size: 0.875rem; /* Reduced from 14px */
+    font-size: 0.875rem;
     color: var(--text-light);
     position: absolute;
     top: 50%;
@@ -788,9 +825,9 @@ table input[type="checkbox"]:focus {
 
 .modal-content {
     background-color: var(--bg-medium);
-    padding: 1.25rem; /* Reduced from 20px */
+    padding: 1.25rem;
     width: 90%;
-    max-width: 31.25rem; /* Reduced from 500px */
+    max-width: 31.25rem;
     box-shadow: 0 8px 25px var(--shadow-strong);
 }
 body:not(.theme-green) .modal-content {
@@ -804,14 +841,14 @@ body.theme-dark .modal-content {
 .modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 0.625rem; /* Reduced from 10px */
-    margin-top: 1.25rem; /* Reduced from 20px */
+    gap: 0.625rem;
+    margin-top: 1.25rem;
 }
 
 #modal-body input,
 #modal-body textarea,
 #modal-body select {
-    margin-top: 0.625rem; /* Reduced from 10px */
+    margin-top: 0.625rem;
 }
 
 /* --- UTILITY & MISC --- */
@@ -827,9 +864,9 @@ ul {
 #account-activities-list li,
 #contact-activities-list li {
     background-color: var(--bg-dark);
-    padding: 0.5rem 0.75rem; /* Reduced from 8px 12px */
-    margin-bottom: 0.3125rem; /* Reduced from 5px */
-    font-size: 0.875rem; /* Reduced from 14px */
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.3125rem;
+    font-size: 0.875rem;
     border-left: 3px solid var(--primary-blue);
     box-shadow: 0 1px 3px var(--shadow-light);
     transition: background-color 0.3s, border-color 0.3s;
@@ -841,8 +878,8 @@ body:not(.theme-green) #contact-activities-list li {
 
 .sequence-status-icon {
     color: var(--completed-color) !important;
-    font-size: 0.75rem; /* Reduced from 12px */
-    margin-left: 0.5rem; /* Reduced from 8px */
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
     display: inline-block;
     vertical-align: middle;
 }
@@ -851,9 +888,9 @@ body:not(.theme-green) #contact-activities-list li {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1rem; /* Reduced from 16px */
-    height: 1rem; /* Reduced from 16px */
-    margin-left: 0.3125rem; /* Reduced from 5px */
+    width: 1rem;
+    height: 1rem;
+    margin-left: 0.3125rem;
     vertical-align: middle;
     flex-shrink: 0;
 }
@@ -901,30 +938,30 @@ body.theme-green .sequence-status-icon-svg-inner {
     }
     .metric-card {
         width: 100%;
-        max-width: 18.75rem; /* Reduced from 300px */
+        max-width: 18.75rem;
     }
 }
 
 /* --- AUTHENTICATION STYLES --- */
 .auth-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100vw;
-    height: 100vh;
     position: fixed;
     top: 0;
     left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     z-index: 2000;
     background: var(--bg-dark);
 }
 
 .auth-box {
     background-color: var(--bg-medium);
-    padding: 1.875rem; /* Reduced from 30px */
+    padding: 1.875rem;
     box-shadow: 0 8px 25px var(--shadow-strong);
     width: 100%;
-    max-width: 25rem; /* Reduced from 400px */
+    max-width: 25rem;
     text-align: center;
 }
 body:not(.theme-green) .auth-box {
@@ -937,12 +974,12 @@ body.theme-dark .auth-box {
 
 .auth-error {
     color: var(--danger-red);
-    min-height: 1.25rem; /* Reduced from 20px */
+    min-height: 1.25rem;
 }
 
 #auth-toggle-link {
     display: block;
-    margin-top: 0.9375rem; /* Reduced from 15px */
+    margin-top: 0.9375rem;
     color: var(--primary-blue);
     text-decoration: none;
 }
@@ -970,13 +1007,23 @@ body.theme-dark .auth-box {
 }
 
 .spinner {
-    border: 0.5rem solid var(--bg-light); /* Reduced from 8px */
-    border-top: 0.5rem solid var(--primary-blue); /* Reduced from 8px */
+    border: 0.5rem solid var(--bg-light);
+    border-top: 0.5rem solid var(--primary-blue);
     border-radius: 50%;
-    width: 3.75rem; /* Reduced from 60px */
-    height: 3.75rem; /* Reduced from 60px */
+    width: 3.75rem;
+    height: 3.75rem;
     animation: spin 1s linear infinite;
 }
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
 /* --- SCROLLBAR STYLING (for WebKit browsers) --- */
 
 /* For the overall scrollbar track */
@@ -1017,12 +1064,4 @@ body.theme-green ::-webkit-scrollbar-thumb:hover {
 
 body.theme-green ::-webkit-scrollbar-track {
     background-color: var(--bg-medium); /* Darker green background for the track */
-}
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
 }
