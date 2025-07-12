@@ -115,61 +115,84 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // --- RENDER FUNCTIONS ---
-    function renderDealsByStageChart() {
-        if (!dealsByStageCanvas || !stageChartEmptyMessage) return;
+   function renderDealsByTimeChart() {
+    if (!dealsByTimeCanvas || !timeChartEmptyMessage) return;
 
-        const openDeals = state.deals.filter(
-            deal => deal.stage !== 'Closed Won' && deal.stage !== 'Closed Lost'
-        );
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-        if (openDeals.length === 0) {
-            dealsByStageCanvas.classList.add('hidden');
-            stageChartEmptyMessage.classList.remove('hidden');
-            return;
+    const funnel = {
+        '0-30 Days': 0,
+        '31-60 Days': 0,
+        '61-90 Days': 0,
+        '90+ Days': 0
+    };
+
+    const openDeals = state.deals.filter(
+        deal => deal.stage !== 'Closed Won' && deal.stage !== 'Closed Lost' && deal.close_month
+    );
+
+    if (openDeals.length === 0) {
+        dealsByTimeCanvas.classList.add('hidden');
+        timeChartEmptyMessage.classList.remove('hidden');
+        return;
+    }
+    dealsByTimeCanvas.classList.remove('hidden');
+    timeChartEmptyMessage.classList.add('hidden');
+    
+    openDeals.forEach(deal => {
+        const closeDate = new Date(deal.close_month);
+        const diffTime = closeDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays >= 0 && diffDays <= 30) {
+            funnel['0-30 Days'] += deal.mrc || 0;
+        } else if (diffDays >= 31 && diffDays <= 60) {
+            funnel['31-60 Days'] += deal.mrc || 0;
+        } else if (diffDays >= 61 && diffDays <= 90) {
+            funnel['61-90 Days'] += deal.mrc || 0;
+        } else if (diffDays > 90) {
+            funnel['90+ Days'] += deal.mrc || 0;
         }
-        dealsByStageCanvas.classList.remove('hidden');
-        stageChartEmptyMessage.classList.add('hidden');
+    });
 
-        const stageCounts = openDeals.reduce((acc, deal) => {
-            const stage = deal.stage || 'Uncategorized';
-            acc[stage] = (acc[stage] || 0) + 1;
-            return acc;
-        }, {});
+    const labels = Object.keys(funnel);
+    const data = Object.values(funnel).map(val => val / 1000);
 
-        const labels = Object.keys(stageCounts);
-        const data = Object.values(stageCounts);
-        const chartColors = ['#4a90e2', '#50e3c2', '#f5a623', '#bd10e0', '#9013fe', '#4a4a4a'];
+    if (state.dealsByTimeChart) {
+        state.dealsByTimeChart.destroy();
+    }
 
-        if (state.dealsByStageChart) {
-            state.dealsByStageChart.destroy();
-        }
-
-        state.dealsByStageChart = new Chart(dealsByStageCanvas, {
-            type: 'doughnut',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Deals by Stage',
-                    data: data,
-                    backgroundColor: chartColors,
-                    borderColor: 'var(--bg-medium)',
-                    borderWidth: 2
-                }]
+    state.dealsByTimeChart = new Chart(dealsByTimeCanvas, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                // The 'label' property has been removed from here
+                data: data,
+                backgroundColor: ['#50e3c2', '#4a90e2', '#f5a623', '#6d6d6d'],
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            color: 'var(--text-medium)'
-                        }
-                    }
+            scales: {
+                x: {
+                    ticks: { color: 'var(--text-medium)' },
+                    grid: { color: 'var(--border-color)' }
+                },
+                y: {
+                    ticks: { color: 'var(--text-medium)' },
+                    grid: { display: false }
                 }
             }
-        });
-    }
+        }
+    });
+}
 
     function renderDealsByTimeChart() {
         if (!dealsByTimeCanvas || !timeChartEmptyMessage) return;
