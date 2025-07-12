@@ -150,7 +150,7 @@ body.theme-green::before {
 .auth-logo, .nav-logo {
     width: 250px;
     height: auto;
-    margin-bottom: 1.25rem;
+    margin-bottom: 0.75rem; /* Reduced margin-bottom for a tighter look */
     filter: drop-shadow(0 0 7px var(--primary-blue));
     transition: filter 0.3s;
 }
@@ -497,7 +497,7 @@ select,
 textarea {
     width: 100%;
     padding: 0.625rem;
-    margin: 0.3125rem 0 0.9375rem 0;
+    margin: 0.3125rem 0 0.625rem 0; /* Reduced bottom margin from 0.9375rem (15px) to 0.625rem (10px) */
     background-color: var(--bg-dark);
     border: 1px solid var(--border-color);
     color: var(--text-light);
@@ -544,11 +544,11 @@ label {
 .btn-primary,
 .btn-danger,
 .btn-secondary {
-    padding: 0.625rem 0.9375rem; /* Standard button padding */
+    padding: 0.625rem 0.9375rem;
     border: none;
     color: var(--text-light);
     cursor: pointer;
-    font-size: 0.875rem;     /* Standard button font size */
+    font-size: 0.875rem;
     transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s, background-color 0.3s;
     font-weight: 600;
 }
@@ -603,7 +603,7 @@ body.theme-green .btn-danger {
 
 .full-width {
     width: 100%;
-    margin-bottom: 0.625rem;
+    margin-bottom: 0.625rem; /* Ensure consistency here too */
 }
 
 .controls-bar,
@@ -708,27 +708,24 @@ th.sortable.desc span::after {
 /* Specific styling for the Actions column in My Tasks table (and others) */
 #my-tasks-table th:last-child,
 #my-tasks-table td:last-child,
-#deals-table th:last-child, /* Included for Deals page as well */
-#deals-table td:last-child, /* Included for Deals page as well */
-#dashboard-table th:last-child, /* Included for Sequence Steps Due */
-#dashboard-table td:last-child /* Included for Sequence Steps Due */
+#deals-table th:last-child,
+#deals-table td:last-child,
+#dashboard-table th:last-child,
+#dashboard-table td:last-child
 {
-    /* Use this to make the column fit the content */
     width: 1%;
-    white-space: nowrap; /* Prevent wrapping content */
+    white-space: nowrap;
     padding-left: 0.5rem;
     padding-right: 0.5rem;
 }
 
 /* Center buttons within ALL action columns (last td in a row) */
-/* This now targets all last-child TDs that contain buttons */
 table td:last-child {
-    display: flex; /* Use flexbox for button alignment */
-    justify-content: center; /* Centers items horizontally */
-    align-items: center; /* Centers items vertically */
-    gap: 0.3125rem; /* Adds a small gap between buttons (5px, scaled) */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.3125rem;
 }
-
 
 /* Specific rules for Deals table last columns - removed fixed width, relying on the new generic rule */
 #deals-table th:nth-child(1),
@@ -751,7 +748,6 @@ table td:last-child {
 #deals-table td:nth-child(8) {
     width: 25%;
 }
-
 
 #account-deals-table th:nth-child(1),
 #account-deals-table td:nth-child(1) {
@@ -943,7 +939,7 @@ body.theme-green .sequence-status-icon-svg-inner {
 
 .auth-box {
     background-color: var(--bg-medium);
-    padding: 1.25rem 1.875rem; /* Adjusted padding: 20px top/bottom, 30px left/right */
+    padding: 1.25rem 1.875rem; /* 20px top/bottom, 30px left/right */
     box-shadow: 0 8px 25px var(--shadow-strong);
     width: 100%;
     max-width: 25rem;
@@ -959,22 +955,36 @@ body.theme-dark .auth-box {
 
 .auth-error {
     color: var(--danger-red);
-    min-height: 1.25rem;
+    min-height: 1rem; /* Reduced from 1.25rem (20px) to 1rem (16px) */
+    margin-top: 0.5rem; /* Added margin to push error down */
+    margin-bottom: 0.5rem; /* Added margin to push content down */
 }
 
 #auth-toggle-link,
-#forgot-password-link { /* Target both links */
+#forgot-password-link {
     display: block;
-    margin-top: 0.625rem; /* Adjusted margin for both links */
+    margin-top: 0.625rem;
     color: var(--primary-blue);
     text-decoration: none;
-    font-size: 0.875rem; /* Consistent smaller font size */
+    font-size: 0.875rem;
 }
 
 #auth-toggle-link:hover,
 #forgot-password-link:hover {
     text-decoration: underline;
 }
+
+/* Tighter spacing for form elements within auth-form */
+#auth-form input {
+    margin-top: 0.5rem; /* Reduced from 0.625rem (10px) to 0.5rem (8px) */
+    margin-bottom: 0.5rem; /* Reduced from 0.625rem (10px) to 0.5rem (8px) */
+}
+
+#auth-form button.btn-primary {
+    margin-top: 0.75rem; /* Add a bit more space above the main button */
+    margin-bottom: 0.75rem; /* Added margin below the button */
+}
+
 
 .crm-container.hidden {
     display: none !important;
