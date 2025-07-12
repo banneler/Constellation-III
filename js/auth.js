@@ -7,16 +7,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // --- Ensure modal listeners are set up FIRST ---
+    // This function from shared_constants.js wires up the modal's confirm/cancel buttons
+    // and prepares the modal for use. It needs to run before any showModal calls.
+    setupModalListeners();
+
     // --- DOM Element Selectors (Auth specific) ---
     const authContainer = document.getElementById("auth-container");
+    // const authTitle = document.getElementById("auth-title"); // Removed from HTML, so we can remove this line.
     const authForm = document.getElementById("auth-form");
-    const authTitle = document.getElementById("auth-title"); // Removed from HTML, but still referenced, could be removed here too
     const authError = document.getElementById("auth-error");
     const authEmailInput = document.getElementById("auth-email");
     const authPasswordInput = document.getElementById("auth-password");
     const authSubmitBtn = document.getElementById("auth-submit-btn");
     const authToggleLink = document.getElementById("auth-toggle-link");
-    const forgotPasswordLink = document.getElementById("forgot-password-link"); // NEW: Forgot Password link
+    const forgotPasswordLink = document.getElementById("forgot-password-link");
 
     // Debugging console logs for element selection
     console.log("Auth Container:", authContainer);
@@ -25,19 +30,16 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Auth Password Input:", authPasswordInput);
     console.log("Auth Submit Button:", authSubmitBtn);
     console.log("Auth Toggle Link:", authToggleLink);
-    console.log("Forgot Password Link:", forgotPasswordLink); // Debugging log for new element
+    console.log("Forgot Password Link:", forgotPasswordLink);
 
     let isLoginMode = true;
-
-    // Call setupModalListeners from shared_constants to ensure modal buttons work
-    setupModalListeners();
 
     // --- Event Listener Setup (Auth specific) ---
     authToggleLink.addEventListener("click", (e) => {
         e.preventDefault();
         console.log("Toggle link clicked.");
-        isLoginMode = !isLoginMode;
-        // authTitle.textContent = isLoginMode ? "Login" : "Sign Up"; // Title is removed from HTML
+        // If authTitle was used, uncomment next line. Since it's removed, keep commented.
+        // authTitle.textContent = isLoginMode ? "Login" : "Sign Up";
         authSubmitBtn.textContent = isLoginMode ? "Login" : "Sign Up";
         authToggleLink.textContent = isLoginMode ?
             "Need an account? Sign Up" :
@@ -83,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             console.log("Login successful. Redirecting to command-center.html.");
             authForm.reset();
-            window.location.href = "command-center.html"; // Corrected redirect to command-center.html
+            window.location.href = "command-center.html";
         }
     });
 
@@ -103,12 +105,16 @@ document.addEventListener("DOMContentLoaded", () => {
                         return;
                     }
 
-                    authSubmitBtn.disabled = true; // Disable button to prevent multiple clicks
-                    authSubmitBtn.textContent = 'Sending...';
+                    // Temporarily disable/change text of the modal confirm button for feedback
+                    const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+                    if (modalConfirmBtn) {
+                        modalConfirmBtn.disabled = true;
+                        modalConfirmBtn.textContent = 'Sending...';
+                    }
 
                     // Send password reset email
                     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                        redirectTo: window.location.origin + '/reset-password.html' // IMPORTANT: Create this page
+                        redirectTo: window.location.origin + '/reset-password.html'
                     });
 
                     if (error) {
@@ -118,8 +124,12 @@ document.addEventListener("DOMContentLoaded", () => {
                         alert('Password reset link sent! Check your email (and spam folder).');
                     }
                     hideModal();
-                    authSubmitBtn.disabled = false; // Re-enable button
-                    authSubmitBtn.textContent = isLoginMode ? "Login" : "Sign Up"; // Reset button text
+
+                    // Reset modal confirm button state
+                    if (modalConfirmBtn) {
+                        modalConfirmBtn.disabled = false;
+                        modalConfirmBtn.textContent = 'Confirm';
+                    }
                 }
             );
         });
@@ -127,11 +137,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // --- App Initialization (Auth Page) ---
+    // Make sure 'authTitle' is not referenced here if it's removed from HTML
     supabase.auth.onAuthStateChange(async (event, session) => {
         console.log("Auth event fired on auth page:", event);
         if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session) {
             console.log("User is signed in or has an initial session. Redirecting.");
-            window.location.href = "command-center.html"; // Corrected redirect to command-center.html
+            window.location.href = "command-center.html";
         }
     });
 });
